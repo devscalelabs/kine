@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Version bump script for opencircle monorepo
-# Updates both package.json and pyproject.toml files
+# Updates package.json files
 # Usage: ./bump-version.sh [--major|--minor|--patch|--version X.X.X]
 
 set -e
@@ -79,17 +79,7 @@ update_package_version() {
     fi
 }
 
-# Function to update pyproject.toml version
-update_pyproject_version() {
-    local pyproject_file=$1
-    local new_version=$2
 
-    if [[ -f "$pyproject_file" ]]; then
-        # Use sed to update the version line in pyproject.toml
-        sed -i '' "s/^version = \".*\"/version = \"$new_version\"/" "$pyproject_file"
-        print_info "Updated $(basename $(dirname $pyproject_file))/$(basename $pyproject_file) to $new_version"
-    fi
-}
 
 # Main script logic
 main() {
@@ -125,28 +115,21 @@ main() {
 
     print_info "Starting version bump process..."
 
-    # Get all package.json and pyproject.toml files in the monorepo, excluding node_modules and other dependency directories
+    # Get all package.json files in the monorepo, excluding node_modules and other dependency directories
     package_files=$(find "$(dirname "$0")/.." -name "package.json" -type f -not -path "*/node_modules/*" -not -path "*/.pnpm/*" -not -path "*/dist/*" -not -path "*/build/*")
-    pyproject_files=$(find "$(dirname "$0")/.." -name "pyproject.toml" -type f -not -path "*/node_modules/*" -not -path "*/.pnpm/*" -not -path "*/dist/*" -not -path "*/build/*")
 
-    if [[ -z "$package_files" && -z "$pyproject_files" ]]; then
-        print_error "No package.json or pyproject.toml files found"
+    if [[ -z "$package_files" ]]; then
+        print_error "No package.json files found"
         exit 1
     fi
 
-    # Get current version from root package.json (fallback to pyproject.toml if no root package.json)
+    # Get current version from root package.json
     root_package="$(dirname "$0")/../package.json"
     if [[ -f "$root_package" ]]; then
         current_version=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$root_package', 'utf8')).version)")
     else
-        # Fallback to pyproject.toml
-        root_pyproject="$(dirname "$0")/../pyproject.toml"
-        if [[ -f "$root_pyproject" ]]; then
-            current_version=$(grep "^version = " "$root_pyproject" | sed 's/version = "//' | sed 's/"//')
-        else
-            print_error "No root package.json or pyproject.toml found to determine current version"
-            exit 1
-        fi
+        print_error "No root package.json found to determine current version"
+        exit 1
     fi
 
     print_info "Current version: $current_version"
@@ -173,13 +156,8 @@ main() {
         update_package_version "$package_file" "$new_version"
     done <<< "$package_files"
 
-    # Update all pyproject.toml files
-    while IFS= read -r pyproject_file; do
-        update_pyproject_version "$pyproject_file" "$new_version"
-    done <<< "$pyproject_files"
-
     print_info "Version bump completed successfully!"
-    print_info "All package.json and pyproject.toml files have been updated to version $new_version"
+    print_info "All package.json files have been updated to version $new_version"
     print_info "Next git commands to run:"
     echo "  git add ."
     echo "  git commit -m \"chore: bump version to $new_version\""
