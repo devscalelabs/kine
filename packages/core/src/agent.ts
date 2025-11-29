@@ -138,7 +138,6 @@ ${this.instruction}`
 			}
 
 			if (finalAnswer) {
-				// Add final answer to memory if available
 				if (this.memory) {
 					this.memory.addMessage({ role: "assistant", content: finalAnswer });
 				}
@@ -171,15 +170,11 @@ ${this.instruction}`
 					result = `Input validation failed: ${validation.error.message}`;
 				}
 
-				// Append the assistant's action to history
 				history.push(content);
-
-				// Add the tool result as a user message for the next iteration
 				history.push(
 					`OBSERVATION: ${typeof result === "string" ? result : JSON.stringify(result)}`,
 				);
 			} else {
-				// Add the assistant response to history and continue
 				history.push(content);
 			}
 		}
