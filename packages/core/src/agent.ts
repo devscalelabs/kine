@@ -10,6 +10,7 @@ export interface AgentConfig {
 	maxIterations?: number;
 	instruction?: string | undefined;
 	memory?: MemoryInterface;
+	debug?: boolean;
 }
 
 export interface AgentRunInput {
@@ -23,12 +24,14 @@ export class Agent {
 	private maxIterations: number;
 	private instruction: string | undefined;
 	private memory: MemoryInterface | undefined;
+	private debug: boolean;
 
 	constructor(config: AgentConfig = {}) {
 		this.model = config.model || "gpt-5-mini-2025-08-07";
 		this.maxIterations = config.maxIterations || 10;
 		this.instruction = config.instruction;
 		this.memory = config.memory;
+		this.debug = process.env.DEBUG === "true" || config.debug || false;
 		this.openai = new OpenAI({
 			apiKey: config.apiKey || process.env.OPENAI_API_KEY,
 		});
@@ -122,19 +125,38 @@ ${this.instruction}`
 
 			const content = message.content;
 
+			if (this.debug) {
+				console.log("\n=== AGENT RESPONSE ===");
+				console.log(content);
+			}
+
 			// Parse response
 			const lines = content.split("\n");
 			let actionTool = "";
 			let actionInput = "";
 			let finalAnswer = "";
+			let thought = "";
 
 			for (const line of lines) {
-				if (line.startsWith("ACTION:")) {
+				if (line.startsWith("THOUGHT:")) {
+					thought = line.substring(8).trim();
+					if (this.debug) {
+						console.log(`\n🤔 THOUGHT: ${thought}`);
+					}
+				} else if (line.startsWith("ACTION:")) {
 					const parts = line.substring(7).trim().split(":");
 					actionTool = parts[0]?.trim() || "";
 					actionInput = parts.slice(1).join(":").trim();
-				} else if (line.startsWith("FINAL_ANSWER:"))
+					if (this.debug) {
+						console.log(`🔧 ACTION: ${actionTool}`);
+						console.log(`📥 INPUT: ${actionInput}`);
+					}
+				} else if (line.startsWith("FINAL_ANSWER:")) {
 					finalAnswer = line.substring(13).trim();
+					if (this.debug) {
+						console.log(`✅ FINAL_ANSWER: ${finalAnswer}`);
+					}
+				}
 			}
 
 			if (finalAnswer) {
@@ -170,10 +192,14 @@ ${this.instruction}`
 					result = `Input validation failed: ${validation.error.message}`;
 				}
 
+				const observation = `OBSERVATION: ${typeof result === "string" ? result : JSON.stringify(result)}`;
+
+				if (this.debug) {
+					console.log(`👁️  ${observation}`);
+				}
+
 				history.push(content);
-				history.push(
-					`OBSERVATION: ${typeof result === "string" ? result : JSON.stringify(result)}`,
-				);
+				history.push(observation);
 			} else {
 				history.push(content);
 			}
