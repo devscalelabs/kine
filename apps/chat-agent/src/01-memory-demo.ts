@@ -1,6 +1,6 @@
 import "dotenv/config";
+import { Agent, simpleMemory, userMessage } from "@kine/core";
 import { defineTool } from "@kine/core/tools";
-import { Agent, simpleMemory, userMessage } from "@simpleagent/core";
 import { z } from "zod";
 
 const TimeInputSchema = z.object({

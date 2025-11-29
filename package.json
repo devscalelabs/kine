@@ -1,6 +1,6 @@
 {
-	"name": "openagents",
-	"version": "1.0.0",
+	"name": "kine",
+	"version": "0.0.1",
 	"description": "",
 	"main": "index.js",
 	"scripts": {
