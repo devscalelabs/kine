@@ -1,7 +1,9 @@
 import OpenAI from "openai";
+import { zodResponseFormat } from "openai/helpers/zod";
 import type { MemoryInterface } from "./memory";
 import type { Message } from "./messages";
 import type { ToolInterface } from "./tools";
+import type { z } from "zod";
 
 export interface AgentConfig {
 	model?: string;
@@ -15,6 +17,7 @@ export interface AgentConfig {
 
 export interface AgentRunInput {
 	messages: Message[];
+	zodSchema?: z.ZodSchema<any>;
 }
 
 export class Agent {
@@ -83,16 +86,49 @@ ${this.instruction}`
 			: toolFramework;
 	}
 
-	async run(input: AgentRunInput): Promise<string> {
-		const currentMessages = [...input.messages];
-		const history: string[] = [];
-
+	async run(input: AgentRunInput): Promise<string | any> {
 		// Add input messages to memory if available
 		if (this.memory) {
 			for (const message of input.messages) {
 				this.memory.addMessage(message);
 			}
 		}
+
+		// If structured output is requested, use direct parsing without agent framework
+		if (input.zodSchema) {
+			const messages = [
+				{ role: "system" as const, content: this.createSystemPrompt() },
+				...input.messages.filter(
+					(m) => m.role === "user" || m.role === "assistant",
+				),
+			];
+
+			const response = await this.openai.chat.completions.parse({
+				model: this.model,
+				messages: messages,
+				response_format: zodResponseFormat(input.zodSchema, "response"),
+			});
+
+			const message = response.choices[0]?.message;
+			const parsedMessage = message as any;
+
+			if (parsedMessage?.parsed) {
+				const result = parsedMessage.parsed;
+				if (this.memory) {
+					this.memory.addMessage({
+						role: "assistant",
+						content: JSON.stringify(result),
+					});
+				}
+				return result;
+			} else {
+				return "Failed to parse structured response";
+			}
+		}
+
+		// Normal agent execution with tools
+		const currentMessages = [...input.messages];
+		const history: string[] = [];
 
 		for (let iteration = 0; iteration < this.maxIterations; iteration++) {
 			const messages = [];
@@ -119,6 +155,7 @@ ${this.instruction}`
 			});
 
 			const message = response.choices[0]?.message;
+
 			if (!message?.content) {
 				return "No response from model";
 			}
