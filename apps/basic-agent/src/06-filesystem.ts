@@ -1,10 +1,10 @@
 import "dotenv/config";
-import { Agent, userMessage } from "@simpleagent/core";
+import { Agent, userMessage } from "@kine/core";
 import {
 	listDirectoryTool,
 	readFileTool,
 	writeFileTool,
-} from "@simpleagent/core/tools/filesystem";
+} from "@kine/core/tools/filesystem";
 
 async function main() {
 	const agent = new Agent({

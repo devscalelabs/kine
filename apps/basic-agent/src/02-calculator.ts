@@ -1,6 +1,6 @@
 import "dotenv/config";
-import { Agent, userMessage } from "@simpleagent/core";
-import { calculatorTool } from "@simpleagent/core/tools/calculator";
+import { Agent, userMessage } from "@kine/core";
+import { calculatorTool } from "@kine/core/tools/calculator";
 
 async function main() {
 	const agent = new Agent({

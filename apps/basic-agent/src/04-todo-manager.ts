@@ -1,6 +1,6 @@
 import "dotenv/config";
-import { Agent, userMessage } from "@simpleagent/core";
-import { defineTool } from "@simpleagent/core/tools";
+import { Agent, userMessage } from "@kine/core";
+import { defineTool } from "@kine/core/tools";
 import { z } from "zod";
 
 const todoList: { id: number; task: string; completed: boolean }[] = [
