@@ -22,6 +22,7 @@ const helloTool = defineTool({
 
 async function main() {
 	const agent = new Agent({
+		model: "meituan/longcat-flash-chat",
 		instruction:
 			"You are a friendly assistant that always greets people warmly and enthusiastically.",
 		tools: [helloTool],

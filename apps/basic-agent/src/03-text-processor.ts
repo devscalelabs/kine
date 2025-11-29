@@ -46,6 +46,7 @@ const textTools = [
 
 async function main() {
 	const agent = new Agent({
+		model: "meituan/longcat-flash-chat",
 		instruction:
 			"You are a text analysis expert. Always provide detailed insights about the text structure and characteristics when processing text.",
 		tools: textTools,

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 const agent = new Agent({
 	debug: true,
+	model: "meituan/longcat-flash-chat",
 });
 
 // Define a structured output schema using Zod
