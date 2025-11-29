@@ -1,5 +1,6 @@
 import "dotenv/config";
-import { Agent, userMessage } from "@kine/core";
+import { Agent } from "@kine/core/agent";
+import { userMessage } from "@kine/core/messages";
 import {
 	listDirectoryTool,
 	readFileTool,

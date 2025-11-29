@@ -8,6 +8,7 @@
 		".": "./src/index.ts",
 		"./agent": "./src/agent.ts",
 		"./messages": "./src/messages.ts",
+		"./memory": "./src/memory.ts",
 		"./tools": "./src/tools/index.ts",
 		"./tools/calculator": "./src/tools/calculator.ts",
 		"./tools/filesystem": "./src/tools/filesystem.ts"

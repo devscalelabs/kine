@@ -1,5 +1,7 @@
 import "dotenv/config";
-import { Agent, simpleMemory, userMessage } from "@kine/core";
+import { Agent } from "@kine/core/agent";
+import { simpleMemory } from "@kine/core/memory";
+import { userMessage } from "@kine/core/messages";
 
 async function main() {
 	const memory = simpleMemory();
