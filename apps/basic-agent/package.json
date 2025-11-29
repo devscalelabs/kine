@@ -1,0 +1,26 @@
+{
+	"name": "basic-agent",
+	"version": "1.0.0",
+	"type": "module",
+	"scripts": {
+		"start": "pnpm with-env tsx src/main.ts",
+		"example01": "pnpm with-env tsx src/01-basic-hello.ts",
+		"example02": "pnpm with-env tsx src/02-calculator.ts",
+		"example03": "pnpm with-env tsx src/03-text-processor.ts",
+		"example04": "pnpm with-env tsx src/04-todo-manager.ts",
+		"example05": "pnpm with-env tsx src/05-data-manager.ts",
+		"example06": "pnpm with-env tsx src/06-filesystem.ts",
+		"with-env": "dotenv -e ../../.env --"
+	},
+	"dependencies": {
+		"@kine/core": "workspace:*",
+		"commander": "^14.0.2",
+		"dotenv": "^16.4.5",
+		"zod": "^4.1.13"
+	},
+	"devDependencies": {
+		"@types/node": "^24.10.1",
+		"tsx": "^4.20.6",
+		"typescript": "^5.9.3"
+	}
+}
