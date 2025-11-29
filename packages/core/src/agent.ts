@@ -3,6 +3,8 @@ import { zodResponseFormat } from "openai/helpers/zod";
 import type { MemoryInterface } from "./memory";
 import type { Message } from "./messages";
 import type { ToolInterface } from "./tools";
+import type { MCPConfig } from "./mcp";
+import { defineMCP } from "./mcp";
 import type { z } from "zod";
 
 export interface AgentConfig {
@@ -80,6 +82,33 @@ export class Agent {
 		});
 		console.log(
 			`✅ Batch registration complete. Total tools: ${this.tools.size}`,
+		);
+	}
+
+	async registerMCP(configs: MCPConfig[]): Promise<void> {
+		console.log(`🔌 Registering ${configs.length} MCP servers...`);
+
+		for (const config of configs) {
+			console.log(
+				`🔌 Processing MCP server: ${config.serverLabel || config.serverUrl}`,
+			);
+			try {
+				const tools = await defineMCP(config);
+				this.registerTools(tools);
+				console.log(
+					`✅ MCP server ${config.serverLabel || config.serverUrl} registered successfully`,
+				);
+			} catch (error) {
+				console.error(
+					`❌ Failed to register MCP server ${config.serverLabel || config.serverUrl}:`,
+					error,
+				);
+				throw error;
+			}
+		}
+
+		console.log(
+			`✅ All MCP servers registered. Total tools: ${this.tools.size}`,
 		);
 	}
 
