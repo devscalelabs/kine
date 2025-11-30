@@ -4,7 +4,6 @@ import { Agent } from "@devscalelabs/kine/agent";
 async function main() {
     const agent = new Agent({
         model: "gpt-4o-mini",
-        debug: true,
     });
 
     console.log("1. Simple prompt:");

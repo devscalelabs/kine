@@ -4,17 +4,14 @@ export interface AgentConfig {
     model?: string;
     apiKey?: string;
     baseURL?: string;
-    debug?: boolean;
 }
 
 export class Agent {
     private openai: OpenAI;
     private model: string;
-    private debug: boolean;
 
     constructor(config: AgentConfig = {}) {
         this.model = config.model || "gpt-4o-mini";
-        this.debug = config.debug || false;
 
         const openaiConfig: any = {
             apiKey: config.apiKey || process.env.OPENAI_API_KEY,
@@ -27,43 +24,16 @@ export class Agent {
         this.openai = new OpenAI(openaiConfig);
     }
 
-    private debugLog(message: string, data?: any) {
-        if (this.debug) {
-            console.log(
-                `[Agent] ${message}`,
-                data ? JSON.stringify(data, null, 2) : "",
-            );
-        }
-    }
-
     async run(prompt: string): Promise<string> {
-        this.debugLog("Running agent", {
-            prompt: prompt.substring(0, 50) + "...",
+        const messages = [{ role: "user" as const, content: prompt }];
+
+        const response = await this.openai.chat.completions.create({
+            model: this.model,
+            messages,
+            temperature: 0.7,
+            max_tokens: 2000,
         });
 
-        try {
-            const messages = [{ role: "user" as const, content: prompt }];
-
-            this.debugLog("Sending to LLM");
-
-            const response = await this.openai.chat.completions.create({
-                model: this.model,
-                messages,
-                temperature: 0.7,
-                max_tokens: 2000,
-            });
-
-            const result =
-                response.choices[0]?.message?.content || "No response";
-
-            this.debugLog("Received response", {
-                result: result.substring(0, 50) + "...",
-            });
-
-            return result;
-        } catch (error) {
-            this.debugLog("Error", { error });
-            throw error;
-        }
+        return response.choices[0]?.message?.content || "No response";
     }
 }
