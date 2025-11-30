@@ -1,6 +1,6 @@
 # Kine - AI Agent Framework
 
-A TypeScript framework for building AI agents with tool capabilities, powered by OpenAI.
+A TypeScript framework for building AI agents with tool capabilities.
 
 ## Overview
 
@@ -8,7 +8,7 @@ Kine is a modular framework that enables you to create intelligent AI agents tha
 
 ## Features
 
-- 🤖 **AI Agent Core**: OpenAI-powered agent with configurable models
+- 🤖 **AI Agent Core**: Configurable AI agent with tool integration
 - 🛠️ **Tool System**: Extensible tool framework with input/output validation using Zod schemas
 - 💾 **Conversation History**: Built-in step management and conversation context
 - 🔒 **Type Safety**: Full TypeScript support with Zod validation
@@ -47,6 +47,7 @@ const agent = new Agent({
   id: 'weather-assistant',
   description: 'AI assistant that provides weather information',
   model: 'gpt-4',
+  apiKey: 'your-api-key',  // or use API_KEY env var
   tools: [weatherTool]
 });
 
@@ -65,9 +66,9 @@ The main agent class that orchestrates conversations and tool usage using a ReAc
 const agent = new Agent({
   id: 'my-agent',                    // Unique identifier
   description: 'AI assistant',       // Agent description
-  model: 'gpt-4',                    // OpenAI model
-  apiKey: 'your-api-key',           // or use OPENAI_API_KEY env var
-  baseURL: 'https://api.openai.com', // Optional custom base URL
+  model: 'gpt-4',                    // AI model
+  apiKey: 'your-api-key',           // or use API_KEY env var
+  baseURL: 'custom-api-url',        // Optional custom base URL
   tools: [...]                       // Array of tools
 }, maxSteps = 10);                   // Optional max steps (default: 10)
 ```
@@ -114,7 +115,7 @@ The agent uses a `StepsManager` to track conversation history and manage the ReA
 The agent operates in a strict ReAct loop with YAML-based communication:
 
 ```
-thought: "User asked about weather in New York. I need to use the weather tool."
+thought: "User asked about weather in New York"
 action: "get_weather"
 parameter:
   location: "New York"
@@ -123,9 +124,9 @@ observation:
   temperature: 72
   condition: "sunny"
 
-thought: "Got weather data. Now I can provide final answer."
+thought: "Now I can provide final answer"
 action: "finalize"
-final_answer: "The current weather in New York is 72°F and sunny."
+final_answer: "The current weather in New York is 72°F and sunny"
 ```
 
 ## Agent Response Format
@@ -175,10 +176,12 @@ pnpm run test
 pnpm run format
 ```
 
-## Environment Variables
+## Configuration
 
-- `OPENAI_API_KEY`: Your OpenAI API key (if not provided in config)
-- `OPENAI_BASE_URL`: Custom OpenAI API base URL (optional)
+The framework supports configuration through environment variables:
+
+- `API_KEY`: Your AI provider API key (if not provided in agent config)
+- `BASE_URL`: Custom API base URL (optional)
 - `LOG_LEVEL`: Logging level (default: "debug")
 
 ## License

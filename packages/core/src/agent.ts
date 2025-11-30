@@ -3,6 +3,7 @@ import type { ChatCompletionMessageParam } from "openai/resources";
 import { parse } from "yaml";
 
 import logger from "./logger";
+import type { BaseMemory } from "./memory";
 import { StepsManager } from "./steps";
 import { getToolMetadata } from "./tool";
 import type { AgentConfig, AgentRuntime, Tool } from "./types";
@@ -12,16 +13,17 @@ export class Agent {
 	protected config: AgentConfig;
 	private stepsManager: StepsManager;
 	private tools: Map<string, Tool> = new Map();
+	private memory: BaseMemory | null = null;
 
 	constructor(config: AgentConfig, maxSteps: number = 10) {
 		this.config = config;
 		this.stepsManager = new StepsManager(maxSteps);
+		this.memory = config.memory || null;
 		this.openai = new OpenAI({
 			apiKey: this.config.apiKey ?? process.env.OPENAI_API_KEY,
 			baseURL: this.config.baseURL ?? process.env.OPENAI_BASE_URL,
 		});
 
-		// Auto-register tools from config
 		if (this.config.tools) {
 			for (const tool of this.config.tools) {
 				this.registerTool(tool);
@@ -58,6 +60,11 @@ export class Agent {
 		const systemPrompt = this.buildSystemPrompt();
 		this.stepsManager.initialize();
 
+		// Add initial user message to memory if available
+		if (this.memory) {
+			this.memory.addMessage("user", prompt);
+		}
+
 		let finalResponse: string | null = null;
 
 		while (!this.stepsManager.hasReachedMaxSteps()) {
@@ -70,6 +77,20 @@ export class Agent {
 				parameter: stepOutput.parameter,
 				result: stepOutput.result,
 			});
+
+			// Also add to memory if available
+			if (this.memory) {
+				this.memory.addStep(
+					{
+						type: stepOutput.type,
+						content: stepOutput.content,
+						action: stepOutput.action,
+						parameter: stepOutput.parameter,
+						result: stepOutput.result,
+					},
+					this.stepsManager.getStepCount(),
+				);
+			}
 
 			logger.debug(
 				`[${this.config.id}] Step ${this.stepsManager.getStepCount()}: ${stepOutput.action} - ${stepOutput.content}`,
@@ -91,6 +112,11 @@ export class Agent {
 				`[${this.config.id}] Timeout after ${this.stepsManager.getMaxSteps()} steps`,
 			);
 			finalResponse = `Agent timed out (max ${this.stepsManager.getMaxSteps()} steps).`;
+		}
+
+		// Add final response to memory if available
+		if (this.memory) {
+			this.memory.addMessage("assistant", finalResponse);
 		}
 
 		return {

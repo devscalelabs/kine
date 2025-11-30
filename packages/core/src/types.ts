@@ -1,5 +1,7 @@
 import type { z } from "zod";
 
+import type { BaseMemory } from "./memory";
+
 export type Step = {
 	type: "agent" | "error" | "tool";
 	content: string;
@@ -18,6 +20,7 @@ export interface AgentConfig {
 	apiKey?: string;
 	baseURL?: string;
 	tools?: Tool[];
+	memory?: BaseMemory;
 }
 
 export interface Tool<Input = any, Output = any> {
