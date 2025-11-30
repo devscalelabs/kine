@@ -2,7 +2,9 @@ import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources";
 import { parse } from "yaml";
 
+import logger from "./logger";
 import { StepsManager } from "./steps";
+import { getToolMetadata } from "./tool";
 import type { AgentConfig, AgentRuntime, Tool } from "./types";
 
 export class Agent {
@@ -22,7 +24,13 @@ export class Agent {
 
 	registerTool(tool: Tool): void {
 		this.tools.set(tool.name, tool);
-		console.debug(`[${this.config.id}] Registered tool: ${tool.name}`);
+		logger.debug(`[${this.config.id}] Registered tool: ${tool.name}`);
+
+		// Log tool metadata for debugging
+		const metadata = getToolMetadata(tool);
+		logger.debug(
+			`[${this.config.id}] Tool metadata: ${JSON.stringify(metadata)}`,
+		);
 	}
 
 	private getToolsList(): string {
@@ -31,7 +39,10 @@ export class Agent {
 		}
 
 		const toolDescriptions = Array.from(this.tools.values())
-			.map((t) => `  - ${t.name}: ${t.description}`)
+			.map((t) => {
+				const metadata = getToolMetadata(t);
+				return `  - ${t.name}: ${t.description}\n    Input example: ${metadata.inputExample}\n    Output example: ${metadata.outputExample}`;
+			})
 			.join("\n");
 
 		return `Available tools:\n${toolDescriptions}\n  - finalize: End task and provide final answer`;
@@ -54,12 +65,12 @@ export class Agent {
 				result: stepOutput.result,
 			});
 
-			console.debug(
+			logger.debug(
 				`[${this.config.id}] Step ${this.stepsManager.getStepCount()}: ${stepOutput.action} - ${stepOutput.content}`,
 			);
 
 			if (stepOutput.action === "finalize") {
-				console.debug(`[${this.config.id}] Finalized: ${stepOutput.result}`);
+				logger.debug(`[${this.config.id}] Finalized: ${stepOutput.result}`);
 				finalResponse = stepOutput.result as string;
 				break;
 			}
@@ -71,7 +82,7 @@ export class Agent {
 		}
 
 		if (!finalResponse) {
-			console.debug(
+			logger.debug(
 				`[${this.config.id}] Timeout after ${this.stepsManager.getMaxSteps()} steps`,
 			);
 			finalResponse = `Agent timed out (max ${this.stepsManager.getMaxSteps()} steps).`;
@@ -98,9 +109,21 @@ export class Agent {
 		});
 
 		const rawMsg = completion.choices[0]?.message.content ?? "";
-		const parsed = parse(rawMsg);
+		let parsed: any;
 
-		console.debug(`[${this.config.id}] LLM response: action=${parsed.action}`);
+		try {
+			parsed = parse(rawMsg);
+		} catch (error) {
+			return {
+				type: "error" as const,
+				content: "Invalid YAML format",
+				action: undefined,
+				parameter: undefined,
+				result: `YAML parsing error: ${error instanceof Error ? error.message : String(error)}. Please respond with valid YAML only.`,
+			};
+		}
+
+		logger.debug(`[${this.config.id}] LLM response: action=${parsed.action}`);
 
 		if (!rawMsg.includes("action:")) {
 			return {
@@ -148,21 +171,32 @@ export class Agent {
 		}
 
 		try {
-			const toolResult = await tool.execute(parsed.parameter);
+			// Validate input against tool's schema before execution
+			const validatedInput = tool.inputSchema.parse(parsed.parameter);
+			const toolResult = await tool.execute(validatedInput);
+
+			// Validate output against tool's schema (optional, for debugging)
+			const validatedOutput = tool.outputSchema.parse(toolResult);
+
 			return {
 				type: "tool" as const,
 				content: parsed.thought || "",
 				action: parsed.action,
-				parameter: parsed.parameter,
-				result: toolResult,
+				parameter: validatedInput,
+				result: validatedOutput,
 			};
 		} catch (error: any) {
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
+			const validatedInput = tool.inputSchema.safeParse(parsed.parameter);
 			return {
 				type: "error" as const,
 				content: parsed.thought || "",
 				action: parsed.action,
-				parameter: parsed.parameter,
-				result: `Tool execution failed: ${error.message}`,
+				parameter: validatedInput.success
+					? validatedInput.data
+					: parsed.parameter,
+				result: `Tool execution failed: ${errorMessage}. Please try again with different parameters.`,
 			};
 		}
 	}

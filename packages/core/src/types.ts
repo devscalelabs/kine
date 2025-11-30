@@ -1,3 +1,5 @@
+import type { z } from "zod";
+
 export type Step = {
 	type: "agent" | "error" | "tool";
 	content: string;
@@ -17,8 +19,10 @@ export interface AgentConfig {
 	baseURL: string;
 }
 
-export interface Tool {
+export interface Tool<Input = any, Output = any> {
 	name: string;
 	description: string;
+	inputSchema: z.ZodSchema<Input>;
+	outputSchema: z.ZodSchema<Output>;
 	execute(parameter: any): Promise<any>;
 }

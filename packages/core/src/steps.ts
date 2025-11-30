@@ -83,7 +83,10 @@ export class StepsManager {
 		const pastSteps = this.getPastSteps();
 
 		for (const s of pastSteps) {
-			if ((s.type === "agent" || s.type === "tool") && s.action) {
+			if (
+				(s.type === "agent" || s.type === "tool" || s.type === "error") &&
+				s.action
+			) {
 				let msg = `thought: ${s.content || ""}\naction: ${s.action}\n`;
 				if (s.parameter) {
 					msg += `parameter:\n${this.parameterToYAML(s.parameter)}\n`;
@@ -91,7 +94,7 @@ export class StepsManager {
 				history.push({ role: "assistant", content: msg });
 			}
 			if (
-				(s.type === "tool" || s.type === "agent") &&
+				(s.type === "tool" || s.type === "agent" || s.type === "error") &&
 				s.result !== undefined &&
 				s.result !== "pending"
 			) {
