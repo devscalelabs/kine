@@ -15,8 +15,8 @@ export interface AgentConfig {
 	id: string;
 	description?: string;
 	model: string;
-	apiKey: string;
-	baseURL: string;
+	apiKey?: string;
+	baseURL?: string;
 }
 
 export interface Tool<Input = any, Output = any> {

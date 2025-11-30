@@ -17,8 +17,8 @@ export class Agent {
 		this.config = config;
 		this.stepsManager = new StepsManager(maxSteps);
 		this.openai = new OpenAI({
-			apiKey: this.config.apiKey,
-			baseURL: this.config.baseURL,
+			apiKey: this.config.apiKey ?? process.env.OPENAI_API_KEY,
+			baseURL: this.config.baseURL ?? process.env.OPENAI_BASE_URL,
 		});
 	}
 
