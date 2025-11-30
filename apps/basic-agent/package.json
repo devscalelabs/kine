@@ -1,27 +1,27 @@
 {
-    "name": "basic-agent",
-    "version": "0.0.1",
-    "description": "",
-    "main": "dist/index.js",
-    "type": "module",
-    "scripts": {
-        "build": "tsc",
-        "dev": "pnpm with-env tsx src/main.ts",
-        "with-env": "dotenv -e ../../.env --"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "MIT",
-    "packageManager": "pnpm@10.23.0",
-    "devDependencies": {
-        "@types/node": "^24.10.1",
-        "tsx": "^4.20.6",
-        "typescript": "^5.9.3"
-    },
-    "dependencies": {
-        "@devscalelabs/kine": "workspace:*",
-        "commander": "^14.0.2",
-        "dotenv": "^16.4.5",
-        "dotenv-cli": "^11.0.0"
-    }
+	"name": "basic-agent",
+	"version": "0.0.1",
+	"description": "",
+	"main": "dist/index.js",
+	"type": "module",
+	"scripts": {
+		"build": "tsc",
+		"dev": "pnpm with-env tsx src/main.ts",
+		"with-env": "dotenv -e ../../.env --"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "MIT",
+	"packageManager": "pnpm@10.23.0",
+	"devDependencies": {
+		"@types/node": "^24.10.1",
+		"tsx": "^4.20.6",
+		"typescript": "^5.9.3"
+	},
+	"dependencies": {
+		"@devscalelabs/kine": "workspace:*",
+		"commander": "^14.0.2",
+		"dotenv": "^16.4.5",
+		"dotenv-cli": "^11.0.0"
+	}
 }

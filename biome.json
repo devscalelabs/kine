@@ -30,7 +30,20 @@
 		"enabled": true,
 		"actions": {
 			"source": {
-				"organizeImports": "on"
+				"organizeImports": {
+					"level": "on",
+					"options": {
+						"groups": [
+							":PACKAGE:",
+							":BLANK_LINE:",
+							["@/assets/**"],
+							":BLANK_LINE:",
+							["@/common/**", "@/lib/**", "@/api/**", "@/utils/**"],
+							":BLANK_LINE:",
+							["./**"]
+						]
+					}
+				}
 			}
 		}
 	}
