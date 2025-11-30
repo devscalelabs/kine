@@ -33,8 +33,6 @@ async function main() {
 	const agent = new Agent({
 		id: "AI Agent",
 		model: "openai/gpt-oss-120b:exacto",
-		baseURL: process.env.OPENAI_BASE_URL!,
-		apiKey: process.env.OPENAI_API_KEY!,
 	});
 
 	// Register the weather tool
