@@ -1,6 +1,5 @@
 export * from "./agent";
 export {
-	createTool,
 	defineTool,
 	getToolMetadata,
 	type ToolInput,

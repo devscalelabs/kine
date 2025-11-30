@@ -25,44 +25,19 @@ export function defineTool<Input, Output>(
 		inputSchema: definition.input,
 		outputSchema: definition.output,
 		execute: async (input: unknown) => {
-			// Validate input against schema
 			const validatedInput = definition.input.parse(input);
-
-			// Execute the tool function
 			const result = await definition.execute(validatedInput);
-
-			// Validate output against schema (for development/debugging)
 			const validatedOutput = definition.output.parse(result);
-
 			return validatedOutput;
 		},
 	};
 }
 
-// Helper function to create simple tools with less boilerplate
-export function createTool<Input, Output>(
-	id: string,
-	description: string,
-	inputSchema: z.ZodSchema<Input>,
-	outputSchema: z.ZodSchema<Output>,
-	execute: (input: Input) => Promise<Output>,
-): Tool<Input, Output> {
-	return defineTool({
-		id,
-		description,
-		input: inputSchema,
-		output: outputSchema,
-		execute,
-	});
-}
-
-// Type inference helpers
 export type ToolInput<T extends Tool> =
 	T extends Tool<infer Input, any> ? Input : never;
 export type ToolOutput<T extends Tool> =
 	T extends Tool<any, infer Output> ? Output : never;
 
-// Utility to get tool metadata for system prompts
 export function getToolMetadata(tool: Tool): {
 	name: string;
 	description: string;
@@ -89,7 +64,6 @@ export function getToolMetadata(tool: Tool): {
 	}
 }
 
-// Helper function to generate example from Zod schema
 function generateExample(schema: z.ZodSchema): any {
 	try {
 		if (schema instanceof z.ZodObject) {
@@ -120,7 +94,6 @@ function generateExample(schema: z.ZodSchema): any {
 		}
 
 		if (schema instanceof z.ZodDefault) {
-			// Type assertion to handle defaultValue
 			const defaultValue = (schema._def as any).defaultValue();
 			return typeof defaultValue === "function" ? defaultValue() : defaultValue;
 		}

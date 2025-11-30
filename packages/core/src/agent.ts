@@ -26,7 +26,6 @@ export class Agent {
 		this.tools.set(tool.name, tool);
 		logger.debug(`[${this.config.id}] Registered tool: ${tool.name}`);
 
-		// Log tool metadata for debugging
 		const metadata = getToolMetadata(tool);
 		logger.debug(
 			`[${this.config.id}] Tool metadata: ${JSON.stringify(metadata)}`,
@@ -77,7 +76,6 @@ export class Agent {
 
 			if (this.stepsManager.isEroded(stepOutput)) {
 				this.stepsManager.incrementContextSwitches();
-				// Future: If > 2, call this.adapt()
 			}
 		}
 
@@ -171,11 +169,8 @@ export class Agent {
 		}
 
 		try {
-			// Validate input against tool's schema before execution
 			const validatedInput = tool.inputSchema.parse(parsed.parameter);
 			const toolResult = await tool.execute(validatedInput);
-
-			// Validate output against tool's schema (optional, for debugging)
 			const validatedOutput = tool.outputSchema.parse(toolResult);
 
 			return {
@@ -205,51 +200,51 @@ export class Agent {
 		const toolsList = this.getToolsList();
 
 		return `
-		// Execute tool	// Build system promptYour id: ${this.config.id}
-Your description: ${this.config.description || "AI Agent built with Kine by Devscalelabs"}
+		Your id: ${this.config.id}
+    Your description: ${this.config.description || "AI Agent built with Kine by Devscalelabs"}
 
-You are an AI agent operating in a strict ReAct loop: THINK → ACT → OBSERVE → REPEAT.
+    You are an AI agent operating in a strict ReAct loop: THINK → ACT → OBSERVE → REPEAT.
 
-${toolsList}
+    ${toolsList}
 
-REQUIRED FIELDS IN EVERY RESPONSE:
-- thought: (string) Your reasoning about what to do next
-- action: (string) Name of tool to use, or 'finalize' to end
-- parameter: (object) Input data for the tool
+    REQUIRED FIELDS IN EVERY RESPONSE:
+    - thought: (string) Your reasoning about what to do next
+    - action: (string) Name of tool to use, or 'finalize' to end
+    - parameter: (object) Input data for the tool
 
-WHEN ACTION IS 'finalize':
-- final_answer: (string) REQUIRED. Your complete response to the user. MUST be substantive and helpful.
+    WHEN ACTION IS 'finalize':
+    - final_answer: (string) REQUIRED. Your complete response to the user. MUST be substantive and helpful.
 
-❗ CRITICAL RULES:
-1. EVERY response MUST include 'action' field
-2. NEVER use backticks, code blocks, or text outside YAML
-3. YAML keys must be lowercase
-4. If you can answer immediately, use 'finalize' with a complete 'final_answer'
-5. If you need information, use a tool, then 'finalize' with the answer
-6. 'final_answer' must NEVER be empty or generic - provide real value
+    CRITICAL RULES:
+    1. EVERY response MUST include 'action' field
+    2. NEVER use backticks, code blocks, or text outside YAML
+    3. YAML keys must be lowercase
+    4. If you can answer immediately, use 'finalize' with a complete 'final_answer'
+    5. If you need information, use a tool, then 'finalize' with the answer
+    6. 'final_answer' must NEVER be empty or generic - provide real value
 
-✅ EXAMPLES:
+    EXAMPLES:
 
-# Example 1: Simple query (no tools needed)
-thought: "User asked for introduction. I can answer directly without tools."
-action: "finalize"
-final_answer: "I am ${this.config.id}, an AI agent built with Kine by Devscalelabs. I can help you with various tasks using my available tools."
+    # Example 1: Simple query (no tools needed)
+    thought: "User asked for introduction. I can answer directly without tools."
+    action: "finalize"
+    final_answer: "I am ${this.config.id}, an AI agent built with Kine by Devscalelabs. I can help you with various tasks using my available tools."
 
-# Example 2: Need to use tool first
-thought: "User wants current weather. I need to use the weather tool."
-action: "get_weather"
-parameter:
-  location: "New York"
+    # Example 2: Need to use tool first
+    thought: "User wants current weather. I need to use the weather tool."
+    action: "get_weather"
+    parameter:
+      location: "New York"
 
-# After tool returns observation
-observation:
-  temperature: 72
-  condition: "sunny"
-thought: "Got weather data. Now I can provide final answer."
-action: "finalize"
-final_answer: "The current weather in New York is 72°F and sunny."
+    # After tool returns observation
+    observation:
+      temperature: 72
+      condition: "sunny"
+    thought: "Got weather data. Now I can provide final answer."
+    action: "finalize"
+    final_answer: "The current weather in New York is 72°F and sunny."
 
-BEGIN. RESPOND WITH VALID YAML ONLY.
+    BEGIN. RESPOND WITH VALID YAML ONLY.
     `.trim();
 	}
 }

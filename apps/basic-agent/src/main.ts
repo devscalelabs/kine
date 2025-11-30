@@ -40,7 +40,9 @@ async function main() {
 	// Register the weather tool
 	agent.registerTool(getWeather);
 
-	const response = await agent.run("What's the weather like in New York?");
+	const response = await agent.run(
+		"What's the weather like in New York and Tokyo?",
+	);
 	console.log(response.response);
 }
 
