@@ -3,7 +3,6 @@ import { defineTool } from "@devscalelabs/kine";
 import { Agent } from "@devscalelabs/kine/agent";
 import { z } from "zod";
 
-// Define a weather tool
 const getWeather = defineTool({
 	id: "get_weather",
 	description: "Get current weather information for a location",
@@ -17,11 +16,8 @@ const getWeather = defineTool({
 		humidity: z.number().optional(),
 	}),
 	execute: async ({ location, units }) => {
-		// Simulate weather API call
-		console.log(`Fetching weather for ${location} in ${units}...`);
-
-		// Mock response
 		return {
+			location: location,
 			temperature: units === "celsius" ? 22 : 72,
 			condition: "sunny",
 			humidity: 65,
@@ -33,13 +29,11 @@ async function main() {
 	const agent = new Agent({
 		id: "AI Agent",
 		model: "openai/gpt-oss-120b:exacto",
+		tools: [getWeather],
 	});
 
-	// Register the weather tool
-	agent.registerTool(getWeather);
-
 	const response = await agent.run(
-		"What's the weather like in New York and Tokyo?",
+		"What's the weather like in New York in Celcius and Tokyo in Fahrenheit?",
 	);
 	console.log(response.response);
 }

@@ -20,6 +20,13 @@ export class Agent {
 			apiKey: this.config.apiKey ?? process.env.OPENAI_API_KEY,
 			baseURL: this.config.baseURL ?? process.env.OPENAI_BASE_URL,
 		});
+
+		// Auto-register tools from config
+		if (this.config.tools) {
+			for (const tool of this.config.tools) {
+				this.registerTool(tool);
+			}
+		}
 	}
 
 	registerTool(tool: Tool): void {
