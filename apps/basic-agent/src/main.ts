@@ -1,8 +1,8 @@
-import "dotenv/config";
-import { defineTool } from "@devscalelabs/kine";
 import { Agent } from "@devscalelabs/kine/agent";
 import { SimpleMemory } from "@devscalelabs/kine/memory";
+import { defineTool } from "@devscalelabs/kine/tool";
 import { z } from "zod";
+import "dotenv/config";
 
 const getWeather = defineTool({
 	id: "get_weather",
@@ -35,7 +35,7 @@ async function main() {
 
 	const agent = new Agent({
 		id: "AI Agent",
-		model: "openai/gpt-oss-120b:exacto",
+		model: "meta-llama/llama-4-maverick",
 		tools: [getWeather],
 		memory: memory, // Inject memory into the agent
 	});
