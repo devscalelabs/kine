@@ -1,7 +1,7 @@
 import "dotenv/config";
-import { Agent } from "@kine/core/agent";
-import { userMessage } from "@kine/core/messages";
-import { defineTool } from "@kine/core/tools";
+import { Agent } from "@devscalelabs/kine/agent";
+import { userMessage } from "@devscalelabs/kine/messages";
+import { defineTool } from "@devscalelabs/kine/tools";
 import { z } from "zod";
 
 const textTools = [
@@ -12,59 +12,40 @@ const textTools = [
 			text: z.string().describe("Text to count words in"),
 		}),
 		outputSchema: z.object({
-			wordCount: z.number(),
-			characterCount: z.number(),
+			count: z.number().describe("Number of words"),
 		}),
 		execute: async ({ input }) => {
-			const words = input.text
-				.trim()
-				.split(/\s+/)
-				.filter((word: string) => word.length > 0);
-			return {
-				wordCount: words.length,
-				characterCount: input.text.length,
-			};
+			const count = input.text.trim().split(/\s+/).filter(Boolean).length;
+			return { count };
 		},
 	}),
-
 	defineTool({
 		name: "reverse_text",
-		description: "Reverses the given text",
+		description: "Reverses the order of characters in a text",
 		inputSchema: z.object({
 			text: z.string().describe("Text to reverse"),
 		}),
 		outputSchema: z.object({
-			reversed: z.string(),
+			reversed: z.string().describe("Reversed text"),
 		}),
 		execute: async ({ input }) => {
-			return {
-				reversed: input.text.split("").reverse().join(""),
-			};
+			return { reversed: input.text.split("").reverse().join("") };
 		},
 	}),
 ];
 
 async function main() {
 	const agent = new Agent({
-		model: "meituan/longcat-flash-chat",
 		instruction:
-			"You are a text analysis expert. Always provide detailed insights about the text structure and characteristics when processing text.",
+			"You are a helpful text processing assistant. Use the appropriate tool based on user requests.",
 		tools: textTools,
 	});
 
-	console.log("Running text processing example...");
-	try {
-		const result = await agent.run({
-			messages: [
-				userMessage(
-					"Count the words in 'Hello world, how are you today?' and then reverse that text",
-				),
-			],
-		});
-		console.log("Agent response:", result);
-	} catch (error) {
-		console.error("Error:", error);
-	}
+	const response = await agent.run({
+		messages: [userMessage("Count the words in: 'Hello world this is a test'")],
+	});
+
+	console.log(response);
 }
 
 main().catch(console.error);

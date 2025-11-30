@@ -17,13 +17,13 @@ Kine is a modular framework that enables you to create intelligent AI agents tha
 ## Installation
 
 ```bash
-pnpm add @kine/core
+pnpm add @devscalelabs/kine
 ```
 
 ## Quick Start
 
 ```typescript
-import { Agent, simpleMemory, calculatorTool } from '@kine/core';
+import { Agent, simpleMemory, calculatorTool } from '@devscalelabs/kine';
 
 // Create an agent with tools and memory
 const agent = new Agent({
@@ -63,7 +63,7 @@ const agent = new Agent({
 Tools are defined with input/output schemas and execution logic:
 
 ```typescript
-import { defineTool, z } from '@kine/core';
+import { defineTool, z } from '@devscalelabs/kine';
 
 const myTool = defineTool({
   name: 'my_tool',
@@ -91,7 +91,7 @@ import {
   readFileTool, 
   writeFileTool, 
   listDirectoryTool 
-} from '@kine/core/tools';
+} from '@devscalelabs/kine/tools';
 ```
 
 ### Memory
@@ -99,7 +99,7 @@ import {
 Manage conversation history and context:
 
 ```typescript
-import { simpleMemory } from '@kine/core';
+import { simpleMemory } from '@devscalelabs/kine';
 
 const memory = simpleMemory();
 // Automatically stores conversation when used with Agent

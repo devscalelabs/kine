@@ -1,4 +1,4 @@
-import { spawn } from "child_process";
+import { spawn } from "node:child_process";
 import { z } from "zod";
 import { defineTool, type ToolInterface } from "./tools";
 
@@ -70,7 +70,7 @@ class StdioMCPClient implements MCPClientInterface {
 				params: {},
 			};
 
-			this.process.stdin.write(JSON.stringify(request) + "\n");
+			this.process.stdin.write(`${JSON.stringify(request)}\n`);
 
 			// Wait for response
 			return new Promise((resolve, reject) => {
@@ -95,7 +95,7 @@ class StdioMCPClient implements MCPClientInterface {
 								}
 							}
 						}
-					} catch (e) {
+					} catch (_e) {
 						// Not complete JSON yet, continue waiting
 					}
 				});
@@ -170,13 +170,13 @@ class StdioMCPClient implements MCPClientInterface {
 								}
 							}
 						}
-					} catch (e) {
+					} catch (_e) {
 						// Not complete JSON yet, continue waiting
 					}
 				};
 
 				this.process.stdout.on("data", onData);
-				this.process.stdin.write(JSON.stringify(request) + "\n");
+				this.process.stdin.write(`${JSON.stringify(request)}\n`);
 			});
 		} catch (error) {
 			console.error(`Failed to call MCP tool ${name}:`, error);
@@ -269,7 +269,7 @@ class HTTPMCPClient implements MCPClientInterface {
 
 		if (this.config.allowedTools) {
 			return tools.filter((tool: MCPTool) =>
-				this.config.allowedTools!.includes(tool.name),
+				this.config.allowedTools?.includes(tool.name),
 			);
 		}
 
@@ -307,7 +307,7 @@ class HTTPMCPClient implements MCPClientInterface {
 
 		if (this.config.auth) {
 			if (this.config.auth.type === "bearer") {
-				headers["Authorization"] = `Bearer ${this.config.auth.token}`;
+				headers.Authorization = `Bearer ${this.config.auth.token}`;
 			} else if (this.config.auth.type === "api_key") {
 				headers["X-API-Key"] = this.config.auth.token;
 			}

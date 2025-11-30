@@ -1,11 +1,11 @@
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
+import type { z } from "zod";
+import type { MCPConfig } from "./mcp";
+import { defineMCP } from "./mcp";
 import type { MemoryInterface } from "./memory";
 import type { Message } from "./messages";
 import type { ToolInterface } from "./tools";
-import type { MCPConfig } from "./mcp";
-import { defineMCP } from "./mcp";
-import type { z } from "zod";
 
 export interface AgentConfig {
 	model?: string;

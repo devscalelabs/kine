@@ -1,27 +1,33 @@
 {
 	"name": "basic-agent",
 	"version": "0.0.1",
+	"description": "",
+	"main": "dist/index.js",
 	"type": "module",
 	"scripts": {
-		"start": "pnpm with-env tsx src/main.ts",
-		"example01": "pnpm with-env tsx src/01-basic-hello.ts",
-		"example02": "pnpm with-env tsx src/02-calculator.ts",
-		"example03": "pnpm with-env tsx src/03-text-processor.ts",
-		"example04": "pnpm with-env tsx src/04-todo-manager.ts",
-		"example05": "pnpm with-env tsx src/05-data-manager.ts",
-		"example06": "pnpm with-env tsx src/06-filesystem.ts",
-		"example07": "pnpm with-env tsx src/07-structured-output.ts",
-		"with-env": "dotenv -e ../../.env --"
+		"build": "tsc",
+		"dev": "tsx src/main.ts",
+		"run:01": "tsx src/01-basic-hello.ts",
+		"run:02": "tsx src/02-calculator.ts",
+		"run:03": "tsx src/03-text-processor.ts",
+		"run:04": "tsx src/04-todo-manager.ts",
+		"run:05": "tsx src/05-data-manager.ts",
+		"run:06": "tsx src/06-filesystem.ts",
+		"run:07": "tsx src/07-structured-output.ts"
 	},
-	"dependencies": {
-		"@kine/core": "workspace:*",
-		"commander": "^14.0.2",
-		"dotenv": "^16.4.5",
-		"zod": "^4.1.13"
-	},
+	"keywords": [],
+	"author": "",
+	"license": "MIT",
+	"packageManager": "pnpm@10.23.0",
 	"devDependencies": {
 		"@types/node": "^24.10.1",
 		"tsx": "^4.20.6",
 		"typescript": "^5.9.3"
+	},
+	"dependencies": {
+		"@devscalelabs/kine": "workspace:*",
+		"commander": "^14.0.2",
+		"dotenv": "^16.4.5",
+		"zod": "^4.1.13"
 	}
 }

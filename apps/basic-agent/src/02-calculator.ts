@@ -1,7 +1,7 @@
 import "dotenv/config";
-import { Agent } from "@kine/core/agent";
-import { userMessage } from "@kine/core/messages";
-import { calculatorTool } from "@kine/core/tools/calculator";
+import { Agent } from "@devscalelabs/kine/agent";
+import { userMessage } from "@devscalelabs/kine/messages";
+import { calculatorTool } from "@devscalelabs/kine/tools/calculator";
 
 async function main() {
 	const agent = new Agent({
@@ -10,15 +10,11 @@ async function main() {
 		tools: [calculatorTool],
 	});
 
-	console.log("Running calculator example...");
-	try {
-		const result = await agent.run({
-			messages: [userMessage("What is 15 plus 27?")],
-		});
-		console.log("Agent response:", result);
-	} catch (error) {
-		console.error("Error:", error);
-	}
+	const response = await agent.run({
+		messages: [userMessage("What is 15 + 27?")],
+	});
+
+	console.log(response);
 }
 
 main().catch(console.error);

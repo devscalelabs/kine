@@ -1,7 +1,7 @@
 import "dotenv/config";
-import { Agent } from "@kine/core/agent";
-import { userMessage } from "@kine/core/messages";
-import { defineTool } from "@kine/core/tools";
+import { Agent } from "@devscalelabs/kine/agent";
+import { userMessage } from "@devscalelabs/kine/messages";
+import { defineTool } from "@devscalelabs/kine/tools";
 import { z } from "zod";
 
 const database: Record<string, any> = {
@@ -10,124 +10,64 @@ const database: Record<string, any> = {
 		{ id: 2, name: "Bob", email: "bob@example.com", age: 25 },
 		{ id: 3, name: "Charlie", email: "charlie@example.com", age: 35 },
 	],
-	products: [
-		{
-			id: 1,
-			name: "Laptop",
-			price: 999.99,
-			category: "Electronics",
-			stock: 10,
-		},
-		{ id: 2, name: "Book", price: 19.99, category: "Books", stock: 50 },
-		{ id: 3, name: "Coffee Mug", price: 12.99, category: "Kitchen", stock: 25 },
-	],
 };
 
 const dataTools = [
 	defineTool({
-		name: "query_table",
-		description: "Queries data from a specific table",
+		name: "get_user",
+		description: "Retrieves a user by ID",
 		inputSchema: z.object({
-			table: z.enum(["users", "products"]).describe("Table to query"),
-			filter: z
-				.string()
-				.optional()
-				.describe("Filter condition (e.g., 'age > 25')"),
+			id: z.number().describe("User ID to retrieve"),
 		}),
 		outputSchema: z.object({
-			data: z.array(z.any()),
-			count: z.number(),
+			user: z.object({
+				id: z.number(),
+				name: z.string(),
+				email: z.string(),
+				age: z.number(),
+			}),
 		}),
 		execute: async ({ input }) => {
-			let data = database[input.table] || [];
-
-			if (input.filter) {
-				// Simple filter parsing for demonstration
-				if (input.filter.includes("age >")) {
-					const age = parseInt(input.filter.split(">")[1].trim(), 10);
-					data = data.filter((item: any) => item.age > age);
-				} else if (input.filter.includes("category =")) {
-					const category = input.filter
-						.split("=")[1]
-						.trim()
-						.replace(/['"]/g, "");
-					data = data.filter((item: any) => item.category === category);
-				}
+			const user = database.users.find((u: any) => u.id === input.id);
+			if (!user) {
+				throw new Error(`User with ID ${input.id} not found`);
 			}
-
-			return { data, count: data.length };
+			return { user };
 		},
 	}),
-
 	defineTool({
-		name: "create_record",
-		description: "Creates a new record in a table",
+		name: "update_user",
+		description: "Updates a user's information",
 		inputSchema: z.object({
-			table: z.enum(["users", "products"]).describe("Table to insert into"),
-			data: z.record(z.string(), z.any()).describe("Record data"),
+			id: z.number().describe("User ID to update"),
+			name: z.string().optional().describe("New name"),
+			email: z.string().optional().describe("New email"),
+			age: z.number().optional().describe("New age"),
 		}),
 		outputSchema: z.object({
 			success: z.boolean(),
-			id: z.number(),
+			user: z.object({
+				id: z.number(),
+				name: z.string(),
+				email: z.string(),
+				age: z.number(),
+			}),
 		}),
 		execute: async ({ input }) => {
-			const table = database[input.table];
-			if (!table) {
-				throw new Error("Table not found");
+			const userIndex = database.users.findIndex((u: any) => u.id === input.id);
+			if (userIndex === -1) {
+				throw new Error(`User with ID ${input.id} not found`);
 			}
 
-			const newId = Math.max(...table.map((item: any) => item.id), 0) + 1;
-			const newRecord = { id: newId, ...input.data };
-			table.push(newRecord);
+			const updatedUser = {
+				...database.users[userIndex],
+				...(input.name && { name: input.name }),
+				...(input.email && { email: input.email }),
+				...(input.age && { age: input.age }),
+			};
 
-			return { success: true, id: newId };
-		},
-	}),
-
-	defineTool({
-		name: "calculate_stats",
-		description: "Calculates statistics on table data",
-		inputSchema: z.object({
-			table: z.enum(["users", "products"]).describe("Table to analyze"),
-			operation: z
-				.enum(["avg", "sum", "count", "min", "max"])
-				.describe("Statistical operation"),
-			field: z.string().describe("Field to calculate on"),
-		}),
-		outputSchema: z.object({
-			result: z.number(),
-			operation: z.string(),
-			field: z.string(),
-		}),
-		execute: async ({ input }) => {
-			const data = database[input.table] || [];
-			const values = data
-				.map((item: any) => item[input.field])
-				.filter((val: any) => typeof val === "number");
-
-			let result: number;
-			switch (input.operation) {
-				case "avg":
-					result =
-						values.reduce((a: number, b: number) => a + b, 0) / values.length;
-					break;
-				case "sum":
-					result = values.reduce((a: number, b: number) => a + b, 0);
-					break;
-				case "count":
-					result = values.length;
-					break;
-				case "min":
-					result = Math.min(...values);
-					break;
-				case "max":
-					result = Math.max(...values);
-					break;
-				default:
-					throw new Error("Unknown operation");
-			}
-
-			return { result, operation: input.operation, field: input.field };
+			database.users[userIndex] = updatedUser;
+			return { success: true, user: updatedUser };
 		},
 	}),
 ];
@@ -135,23 +75,15 @@ const dataTools = [
 async function main() {
 	const agent = new Agent({
 		instruction:
-			"You are a data analyst assistant. Always provide insights about the data patterns and suggest meaningful analyses when working with databases.",
+			"You are a helpful data manager assistant. Use the appropriate tool based on the user's request.",
 		tools: dataTools,
 	});
 
-	console.log("Running data management example...");
-	try {
-		const result = await agent.run({
-			messages: [
-				userMessage(
-					"Show me all users older than 25, then calculate the average age of all users, and finally add a new user named David with age 28",
-				),
-			],
-		});
-		console.log("Agent response:", result);
-	} catch (error) {
-		console.error("Error:", error);
-	}
+	const response = await agent.run({
+		messages: [userMessage("Get user with ID 1")],
+	});
+
+	console.log(response);
 }
 
 main().catch(console.error);

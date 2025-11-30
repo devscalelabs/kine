@@ -1,4 +1,4 @@
-import { Agent } from "@kine/core";
+import { Agent } from "@devscalelabs/kine";
 import { z } from "zod";
 
 const agent = new Agent({
@@ -10,33 +10,23 @@ const agent = new Agent({
 const WeatherSchema = z.object({
 	location: z.string().describe("The location being queried"),
 	temperature: z.number().describe("Temperature in Celsius"),
-	conditions: z
-		.string()
-		.describe("Weather conditions like sunny, cloudy, rainy"),
+	condition: z.string().describe("Weather condition (e.g. sunny, rainy)"),
 	humidity: z.number().describe("Humidity percentage"),
 });
 
-async function testStructuredOutput() {
-	console.log("Testing structured output with Zod schema...");
-
-	const result = await agent.run({
+async function main() {
+	const response = await agent.run({
 		messages: [
 			{
 				role: "user",
 				content:
-					"What's the weather like in Tokyo today? It's 22°C, partly cloudy with 65% humidity.",
+					"Give me weather information for Tokyo, Japan. Return it in the structured format.",
 			},
 		],
 		zodSchema: WeatherSchema,
 	});
 
-	console.log("\n=== STRUCTURED RESULT ===");
-	console.log(result);
-}
-
-
-async function main() {
-	await testStructuredOutput();
+	console.log("Weather data:", response);
 }
 
 main().catch(console.error);

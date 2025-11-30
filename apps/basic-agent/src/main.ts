@@ -1,7 +1,7 @@
 import "dotenv/config";
-import { Agent } from "@kine/core/agent";
-import { userMessage } from "@kine/core/messages";
-import { defineTool } from "@kine/core/tools";
+import { Agent } from "@devscalelabs/kine/agent";
+import { userMessage } from "@devscalelabs/kine/messages";
+import { defineTool } from "@devscalelabs/kine/tools";
 import { z } from "zod";
 
 const WeatherInputSchema = z.object({
@@ -9,47 +9,47 @@ const WeatherInputSchema = z.object({
 	unit: z
 		.enum(["celsius", "fahrenheit"])
 		.optional()
-		.describe("The temperature unit"),
+		.describe("Temperature unit"),
 });
 
 const WeatherOutputSchema = z.object({
-	temperature: z.number(),
-	unit: z.string(),
 	location: z.string(),
+	temperature: z.number(),
+	unit: z.enum(["celsius", "fahrenheit"]),
+	condition: z.string(),
+	humidity: z.number(),
 });
 
 const weatherTool = defineTool({
 	name: "get_weather",
-	description: "Get the current weather in a given location",
+	description: "Get weather information for a location",
 	inputSchema: WeatherInputSchema,
 	outputSchema: WeatherOutputSchema,
 	execute: async ({ input }) => {
-		const { location, unit = "celsius" } = input;
-		console.log(`[WeatherTool] Getting weather for ${location} in ${unit}`);
-
-		// Mock response
-		return {
+		// Mock weather data for demonstration
+		const mockWeatherData = {
+			location: input.location,
 			temperature: 22,
-			unit: unit,
-			location: location,
+			unit: input.unit || "celsius",
+			condition: "partly cloudy",
+			humidity: 65,
 		};
+		return mockWeatherData;
 	},
 });
 
 async function main() {
 	const agent = new Agent({
+		instruction:
+			"You are a helpful weather assistant. Always provide accurate weather information using the get_weather tool.",
 		tools: [weatherTool],
 	});
 
-	console.log("Running weather example...");
-	try {
-		const result = await agent.run({
-			messages: [userMessage("What is the weather in New York?")],
-		});
-		console.log("Agent response:", result);
-	} catch (error) {
-		console.error("Error running agent:", error);
-	}
+	const response = await agent.run({
+		messages: [userMessage("What's the weather like in Paris?")],
+	});
+
+	console.log(response);
 }
 
 main().catch(console.error);
