@@ -4,15 +4,15 @@ A TypeScript framework for building AI agents with tool capabilities, powered by
 
 ## Overview
 
-Kine is a modular framework that enables you to create intelligent AI agents that can interact with external tools and maintain conversation memory. Built with TypeScript and Zod for type safety.
+Kine is a modular framework that enables you to create intelligent AI agents that can interact with external tools using a ReAct (Reasoning + Acting) pattern. Built with TypeScript and Zod for type safety, it uses YAML-based communication between the AI and tools.
 
 ## Features
 
 - 🤖 **AI Agent Core**: OpenAI-powered agent with configurable models
-- 🛠️ **Tool System**: Extensible tool framework with input/output validation
-- 💾 **Memory Management**: Conversation history and context persistence
-- 📁 **Built-in Tools**: Calculator and filesystem tools included
-- 🔒 **Type Safety**: Full TypeScript support with Zod schemas
+- 🛠️ **Tool System**: Extensible tool framework with input/output validation using Zod schemas
+- 💾 **Conversation History**: Built-in step management and conversation context
+- 🔒 **Type Safety**: Full TypeScript support with Zod validation
+- 🧠 **ReAct Pattern**: Structured reasoning and acting loop with YAML communication
 
 ## Installation
 
@@ -23,104 +23,141 @@ pnpm add @devscalelabs/kine
 ## Quick Start
 
 ```typescript
-import { Agent, simpleMemory, calculatorTool } from '@devscalelabs/kine';
+import { Agent, defineTool, z } from '@devscalelabs/kine';
 
-// Create an agent with tools and memory
+// Define a custom tool
+const weatherTool = defineTool({
+  id: 'get_weather',
+  description: 'Get current weather for a location',
+  input: z.object({
+    location: z.string()
+  }),
+  output: z.object({
+    temperature: z.number(),
+    condition: z.string()
+  }),
+  execute: async ({ location }) => {
+    // Your weather API call here
+    return { temperature: 72, condition: 'sunny' };
+  }
+});
+
+// Create an agent with tools
 const agent = new Agent({
+  id: 'weather-assistant',
+  description: 'AI assistant that provides weather information',
   model: 'gpt-4',
-  tools: [calculatorTool],
-  memory: simpleMemory(),
-  instruction: 'You are a helpful math assistant.'
+  tools: [weatherTool]
 });
 
 // Run the agent
-const response = await agent.run({
-  messages: [{ role: 'user', content: 'What is 15 + 27?' }]
-});
-
-console.log(response); // "15 + 27 = 42"
+const result = await agent.run('What is the weather in New York?');
+console.log(result.response); // "The current weather in New York is 72°F and sunny."
 ```
 
 ## Core Components
 
 ### Agent
 
-The main agent class that orchestrates conversations and tool usage.
+The main agent class that orchestrates conversations and tool usage using a ReAct pattern.
 
 ```typescript
 const agent = new Agent({
-  model: 'gpt-4',           // OpenAI model
-  apiKey: 'your-api-key',   // or use OPENAI_API_KEY env var
-  tools: [...],            // Array of tools
-  maxIterations: 10,        // Max tool usage iterations
-  instruction: '...',       // System instructions
-  memory: simpleMemory()    // Memory implementation
-});
+  id: 'my-agent',                    // Unique identifier
+  description: 'AI assistant',       // Agent description
+  model: 'gpt-4',                    // OpenAI model
+  apiKey: 'your-api-key',           // or use OPENAI_API_KEY env var
+  baseURL: 'https://api.openai.com', // Optional custom base URL
+  tools: [...]                       // Array of tools
+}, maxSteps = 10);                   // Optional max steps (default: 10)
 ```
 
 ### Tools
 
-Tools are defined with input/output schemas and execution logic:
+Tools are defined with Zod schemas for input/output validation:
 
 ```typescript
 import { defineTool, z } from '@devscalelabs/kine';
 
 const myTool = defineTool({
-  name: 'my_tool',
-  description: 'Does something useful',
-  inputSchema: z.object({
-    message: z.string()
+  id: 'tool_name',                    // Unique tool identifier
+  description: 'What this tool does',
+  input: z.object({                    // Input schema
+    param1: z.string(),
+    param2: z.number().optional()
   }),
-  outputSchema: z.object({
-    result: z.string()
+  output: z.object({                   // Output schema
+    result: z.string(),
+    success: z.boolean()
   }),
-  execute: async ({ input }) => {
-    return { result: `Processed: ${input.message}` };
+  execute: async (input) => {
+    // Tool implementation
+    return { result: 'success', success: true };
   }
 });
 ```
 
-### Built-in Tools
+### Step Management
 
-- **Calculator**: Basic arithmetic operations
-- **Filesystem**: File operations (read, write, list, search)
+The agent uses a `StepsManager` to track conversation history and manage the ReAct loop:
 
 ```typescript
-import { 
-  calculatorTool, 
-  readFileTool, 
-  writeFileTool, 
-  listDirectoryTool 
-} from '@devscalelabs/kine/tools';
+// Steps are automatically managed and include:
+// - Agent reasoning steps
+// - Tool executions
+// - Error handling
+// - Context switching detection
 ```
 
-### Memory
+## ReAct Pattern
 
-Manage conversation history and context:
+The agent operates in a strict ReAct loop with YAML-based communication:
 
-```typescript
-import { simpleMemory } from '@devscalelabs/kine';
+```
+thought: "User asked about weather in New York. I need to use the weather tool."
+action: "get_weather"
+parameter:
+  location: "New York"
 
-const memory = simpleMemory();
-// Automatically stores conversation when used with Agent
+observation:
+  temperature: 72
+  condition: "sunny"
+
+thought: "Got weather data. Now I can provide final answer."
+action: "finalize"
+final_answer: "The current weather in New York is 72°F and sunny."
 ```
 
 ## Agent Response Format
 
-The agent uses a structured response format:
+The agent returns an `AgentRuntime` object containing:
 
+```typescript
+interface AgentRuntime {
+  response: string;    // Final answer from the agent
+  steps: Step[];       // Complete conversation history
+}
+
+interface Step {
+  type: "agent" | "error" | "tool";
+  content: string;     // Thought or error message
+  action?: string;     // Tool name or "finalize"
+  parameter?: any;     // Tool input parameters
+  result?: any;        // Tool output or final answer
+  meta?: {             // Metadata
+    ctxSwitches: number;
+  };
+}
 ```
-THOUGHT: <reasoning about the task>
-ACTION: <tool_name>:<json_input>
-OBSERVATION: <tool_result>
-FINAL_ANSWER: <final response>
-```
 
-## Examples
+## Error Handling
 
-Check the `apps/` directory for complete examples:
-- `basic-agent/`: Simple agent demonstrations
-- `chat-agent/`: Memory and conversation examples
+The framework includes robust error handling for:
+- Invalid YAML responses from LLM
+- Missing required fields
+- Tool execution failures
+- Schema validation errors
+- Tool not found scenarios
 
 ## Development
 
@@ -128,12 +165,21 @@ Check the `apps/` directory for complete examples:
 # Install dependencies
 pnpm install
 
-# Run examples
-pnpm run dev
+# Build the project
+pnpm run build
+
+# Run tests
+pnpm run test
 
 # Format code
 pnpm run format
 ```
+
+## Environment Variables
+
+- `OPENAI_API_KEY`: Your OpenAI API key (if not provided in config)
+- `OPENAI_BASE_URL`: Custom OpenAI API base URL (optional)
+- `LOG_LEVEL`: Logging level (default: "debug")
 
 ## License
 
