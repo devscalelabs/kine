@@ -21,7 +21,9 @@ npm install @devscalelabs/kine
 ## Quick Start
 
 ```typescript
-import { Agent, defineTool, z } from "@devscalelabs/kine";
+import { Agent } from "@devscalelabs/kine/agent";
+import { defineTool } from "@devscalelabs/kine/tool";
+import { z } from "zod";
 
 // Define a tool
 const weatherTool = defineTool({
