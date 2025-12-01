@@ -322,7 +322,7 @@ export class Agent {
 				content: "LLM response missing 'action' field",
 				action: undefined,
 				parameter: undefined,
-				result: "GPT skipped 'action'",
+				result: "LLM response skipped 'action'",
 				llmMetadata,
 			};
 		}

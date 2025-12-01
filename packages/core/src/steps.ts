@@ -83,7 +83,7 @@ export class StepsManager {
 			step.result === "Tool not found" ||
 			step.result === "Tool execution failed" ||
 			step.result === "No action provided" ||
-			step.result === "GPT skipped 'action'"
+			step.result === "LLM response skipped 'action'"
 		);
 	}
 
