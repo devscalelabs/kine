@@ -150,6 +150,102 @@ export class Agent {
 		return new Response(agentRuntime);
 	}
 
+	async *runStreaming(
+		prompt: string,
+	): AsyncGenerator<
+		{
+			type: "agent" | "error" | "tool";
+			content: string;
+			action?: string;
+			parameter?: any;
+			result?: any;
+		},
+		Response,
+		unknown
+	> {
+		const systemPrompt = this.buildSystemPrompt();
+		this.stepsManager.initialize();
+
+		if (this.memory) {
+			this.memory.addMessage("user", prompt);
+		}
+
+		let finalResponse: string | null = null;
+
+		while (!this.stepsManager.hasReachedMaxSteps()) {
+			const stepOutput = await this.singleStep(systemPrompt, prompt);
+
+			this.stepsManager.addStep(
+				{
+					type: stepOutput.type,
+					content: stepOutput.content,
+					action: stepOutput.action,
+					parameter: stepOutput.parameter,
+					result: stepOutput.result,
+				},
+				stepOutput.llmMetadata,
+			);
+
+			// Get the last added step which includes metadata and stream it
+			const steps = this.stepsManager.getAllSteps();
+			const lastStep = steps[steps.length - 1];
+
+			if (lastStep) {
+				if (this.memory) {
+					this.memory.addStep(lastStep, this.stepsManager.getStepCount());
+				}
+
+				if (this.debug) {
+					logger.debug(
+						`[${this.config.id}] Step ${this.stepsManager.getStepCount()}: ${
+							stepOutput.action
+						} - ${stepOutput.content}`,
+					);
+				}
+
+				yield lastStep;
+			}
+
+			if (stepOutput.action === "finalize") {
+				if (this.debug) {
+					logger.debug(`[${this.config.id}] Finalized: ${stepOutput.result}`);
+				}
+				finalResponse = stepOutput.result as string;
+				break;
+			}
+
+			if (this.stepsManager.isEroded(stepOutput)) {
+				this.stepsManager.incrementContextSwitches();
+			}
+		}
+
+		if (!finalResponse) {
+			if (this.debug) {
+				logger.debug(
+					`[${
+						this.config.id
+					}] Timeout after ${this.stepsManager.getMaxSteps()} steps`,
+				);
+			}
+			finalResponse = `Agent timed out (max ${this.stepsManager.getMaxSteps()} steps).`;
+		}
+
+		if (this.memory) {
+			this.memory.addMessage("assistant", finalResponse);
+		}
+
+		const steps = this.stepsManager.getAllSteps();
+		const usage = MetadataAggregator.aggregate(steps);
+
+		const agentRuntime: AgentRuntime = {
+			response: finalResponse,
+			steps,
+			usage,
+		};
+
+		return new Response(agentRuntime);
+	}
+
 	private async singleStep(systemPrompt: string, task: string) {
 		const messages: ChatCompletionMessageParam[] = [
 			{ role: "system", content: systemPrompt },
