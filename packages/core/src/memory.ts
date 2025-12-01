@@ -111,6 +111,35 @@ export class SimpleMemory implements BaseMemory {
 		};
 	}
 
+	getTokenUsage(): any {
+		// Aggregate token usage from all steps that have metadata
+		const stepsWithTokens = this.steps.filter((step) => step.meta?.tokens);
+		if (stepsWithTokens.length === 0) {
+			return {
+				prompt_tokens: 0,
+				completion_tokens: 0,
+				total_tokens: 0,
+			};
+		}
+
+		return stepsWithTokens.reduce(
+			(acc, step) => {
+				const tokens = step.meta?.tokens;
+				if (tokens) {
+					acc.prompt_tokens += tokens.prompt_tokens || 0;
+					acc.completion_tokens += tokens.completion_tokens || 0;
+					acc.total_tokens += tokens.total_tokens || 0;
+				}
+				return acc;
+			},
+			{
+				prompt_tokens: 0,
+				completion_tokens: 0,
+				total_tokens: 0,
+			},
+		);
+	}
+
 	toConversationHistory(): ChatCompletionMessageParam[] {
 		const history: ChatCompletionMessageParam[] = [];
 

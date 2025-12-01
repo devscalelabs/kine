@@ -49,6 +49,8 @@ export interface BaseMemory {
 	// Utility
 	clearAll(): void;
 	getStats(): Record<string, number>;
+	getTokenUsage(): any;
+	toConversationHistory(): import("openai/resources").ChatCompletionMessageParam[];
 }
 
 export interface MemoryMessage {

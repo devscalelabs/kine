@@ -150,9 +150,7 @@ export class Agent {
 		return new Response(agentRuntime);
 	}
 
-	async *runStreaming(
-		prompt: string,
-	): AsyncGenerator<
+	async *runStreaming(prompt: string): AsyncGenerator<
 		{
 			type: "agent" | "error" | "tool";
 			content: string;
@@ -252,6 +250,17 @@ export class Agent {
 			{ role: "user", content: task },
 		];
 
+		// Add memory conversation history first (for context across multiple runs)
+		if (this.memory) {
+			const memoryHistory = this.memory.toConversationHistory();
+			// Remove the current user message from memory history to avoid duplication
+			const filteredMemoryHistory = memoryHistory.filter(
+				(msg: any) => !(msg.role === "user" && msg.content === task),
+			);
+			messages.splice(1, 0, ...filteredMemoryHistory);
+		}
+
+		// Add current session's step history
 		const history = this.stepsManager.buildConversationHistory();
 		messages.push(...history);
 
