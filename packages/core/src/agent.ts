@@ -3,10 +3,9 @@ import type { ChatCompletionMessageParam } from "openai/resources";
 import { parse } from "yaml";
 
 import logger from "./logger";
-import type { BaseMemory } from "./memory";
 import { StepsManager } from "./steps";
 import { getToolMetadata } from "./tool";
-import type { AgentConfig, AgentRuntime, Tool } from "./types";
+import type { AgentConfig, AgentRuntime, BaseMemory, Tool } from "./types";
 
 export class Agent {
 	private openai: OpenAI;
@@ -14,11 +13,13 @@ export class Agent {
 	private stepsManager: StepsManager;
 	private tools: Map<string, Tool> = new Map();
 	private memory: BaseMemory | null = null;
+	private debug: boolean;
 
-	constructor(config: AgentConfig, maxSteps: number = 10) {
+	constructor(config: AgentConfig, maxSteps: number = 10, debug?: boolean) {
 		this.config = config;
 		this.stepsManager = new StepsManager(maxSteps);
 		this.memory = config.memory || null;
+		this.debug = debug ?? process.env.KINE_DEBUG === "true" ?? false;
 		this.openai = new OpenAI({
 			apiKey: this.config.apiKey ?? process.env.OPENAI_API_KEY,
 			baseURL: this.config.baseURL ?? process.env.OPENAI_BASE_URL,
@@ -31,14 +32,22 @@ export class Agent {
 		}
 	}
 
+	getDebug(): boolean {
+		return this.debug;
+	}
+
 	registerTool(tool: Tool): void {
 		this.tools.set(tool.name, tool);
-		logger.debug(`[${this.config.id}] Registered tool: ${tool.name}`);
+		if (this.debug) {
+			logger.debug(`[${this.config.id}] Registered tool: ${tool.name}`);
+		}
 
 		const metadata = getToolMetadata(tool);
-		logger.debug(
-			`[${this.config.id}] Tool metadata: ${JSON.stringify(metadata)}`,
-		);
+		if (this.debug) {
+			logger.debug(
+				`[${this.config.id}] Tool metadata: ${JSON.stringify(metadata)}`,
+			);
+		}
 	}
 
 	private getToolsList(): string {
@@ -60,7 +69,6 @@ export class Agent {
 		const systemPrompt = this.buildSystemPrompt();
 		this.stepsManager.initialize();
 
-		// Add initial user message to memory if available
 		if (this.memory) {
 			this.memory.addMessage("user", prompt);
 		}
@@ -78,7 +86,6 @@ export class Agent {
 				result: stepOutput.result,
 			});
 
-			// Also add to memory if available
 			if (this.memory) {
 				this.memory.addStep(
 					{
@@ -92,12 +99,16 @@ export class Agent {
 				);
 			}
 
-			logger.debug(
-				`[${this.config.id}] Step ${this.stepsManager.getStepCount()}: ${stepOutput.action} - ${stepOutput.content}`,
-			);
+			if (this.debug) {
+				logger.debug(
+					`[${this.config.id}] Step ${this.stepsManager.getStepCount()}: ${stepOutput.action} - ${stepOutput.content}`,
+				);
+			}
 
 			if (stepOutput.action === "finalize") {
-				logger.debug(`[${this.config.id}] Finalized: ${stepOutput.result}`);
+				if (this.debug) {
+					logger.debug(`[${this.config.id}] Finalized: ${stepOutput.result}`);
+				}
 				finalResponse = stepOutput.result as string;
 				break;
 			}
@@ -108,13 +119,14 @@ export class Agent {
 		}
 
 		if (!finalResponse) {
-			logger.debug(
-				`[${this.config.id}] Timeout after ${this.stepsManager.getMaxSteps()} steps`,
-			);
+			if (this.debug) {
+				logger.debug(
+					`[${this.config.id}] Timeout after ${this.stepsManager.getMaxSteps()} steps`,
+				);
+			}
 			finalResponse = `Agent timed out (max ${this.stepsManager.getMaxSteps()} steps).`;
 		}
 
-		// Add final response to memory if available
 		if (this.memory) {
 			this.memory.addMessage("assistant", finalResponse);
 		}
@@ -154,7 +166,9 @@ export class Agent {
 			};
 		}
 
-		logger.debug(`[${this.config.id}] LLM response: action=${parsed.action}`);
+		if (this.debug) {
+			logger.debug(`[${this.config.id}] LLM response: action=${parsed.action}`);
+		}
 
 		if (!rawMsg.includes("action:")) {
 			return {

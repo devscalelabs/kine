@@ -1,10 +1,4 @@
 export * from "./agent";
-export type {
-	BaseMemory,
-	MemoryConfig,
-	MemoryMessage,
-	MemoryStep,
-} from "./memory";
 export { SimpleMemory } from "./memory";
 export {
 	defineTool,
@@ -12,4 +6,12 @@ export {
 	type ToolInput,
 	type ToolOutput,
 } from "./tool";
-export type { AgentConfig, AgentRuntime, Step } from "./types";
+export type {
+	AgentConfig,
+	AgentRuntime,
+	BaseMemory,
+	MemoryConfig,
+	MemoryMessage,
+	MemoryStep,
+	Step,
+} from "./types";

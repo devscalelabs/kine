@@ -4,6 +4,7 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
+		"dev": "pnpm run --filter=basic-agent dev",
 		"format": "pnpm exec biome format --write",
 		"lint": "pnpm exec biome check",
 		"lint:fix": "pnpm exec biome check --write --unsafe"

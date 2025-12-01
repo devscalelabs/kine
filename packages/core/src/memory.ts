@@ -4,49 +4,13 @@ import type {
 	ChatCompletionToolMessageParam,
 } from "openai/resources";
 
-import type { Step } from "./types";
-
-export interface BaseMemory {
-	// Message management
-	addMessage(
-		role: "user" | "assistant" | "system",
-		content: string,
-		metadata?: Record<string, any>,
-	): void;
-	getMessages(): MemoryMessage[];
-	getRecentMessages(count: number): MemoryMessage[];
-	clearMessages(): void;
-
-	// Step management
-	addStep(step: Omit<Step, "meta">, stepNumber: number): void;
-	getSteps(): MemoryStep[];
-	getRecentSteps(count: number): MemoryStep[];
-	clearSteps(): void;
-
-	// Utility
-	clearAll(): void;
-	getStats(): Record<string, number>;
-
-	// OpenAI tool calling format
-	toOpenAIConversationHistory(): ChatCompletionMessageParam[];
-}
-
-export interface MemoryMessage {
-	role: "user" | "assistant" | "system";
-	content: string;
-	timestamp: Date;
-	metadata?: Record<string, any> | undefined;
-}
-
-export interface MemoryStep extends Step {
-	timestamp: Date;
-	stepNumber: number;
-}
-
-export interface MemoryConfig {
-	maxMessages?: number;
-	maxSteps?: number;
-}
+import type {
+	BaseMemory,
+	MemoryConfig,
+	MemoryMessage,
+	MemoryStep,
+	Step,
+} from "./types";
 
 export class SimpleMemory implements BaseMemory {
 	private messages: MemoryMessage[] = [];
@@ -75,7 +39,6 @@ export class SimpleMemory implements BaseMemory {
 
 		this.messages.push(message);
 
-		// Enforce max messages limit
 		if (this.messages.length > (this.config.maxMessages || 1000)) {
 			this.messages = this.messages.slice(-(this.config.maxMessages || 1000));
 		}
@@ -91,7 +54,6 @@ export class SimpleMemory implements BaseMemory {
 
 		this.steps.push(memoryStep);
 
-		// Enforce max steps limit
 		if (this.steps.length > (this.config.maxSteps || 100)) {
 			this.steps = this.steps.slice(-(this.config.maxSteps || 100));
 		}
@@ -153,11 +115,9 @@ export class SimpleMemory implements BaseMemory {
 	toConversationHistory(): ChatCompletionMessageParam[] {
 		const history: ChatCompletionMessageParam[] = [];
 
-		// Build chronological history by interleaving messages and steps
 		let messageIndex = 0;
 		let stepIndex = 0;
 
-		// Add initial user message first
 		if (this.messages.length > 0 && this.messages[0]?.role === "user") {
 			history.push({
 				role: "user",
@@ -166,12 +126,10 @@ export class SimpleMemory implements BaseMemory {
 			messageIndex++;
 		}
 
-		// Interleave steps and remaining messages in chronological order
 		while (
 			stepIndex < this.steps.length ||
 			messageIndex < this.messages.length
 		) {
-			// Get next step or message based on timestamp
 			const nextStep =
 				stepIndex < this.steps.length ? this.steps[stepIndex] : undefined;
 			const nextMessage =
@@ -185,13 +143,10 @@ export class SimpleMemory implements BaseMemory {
 				nextStep.timestamp &&
 				nextMessage.timestamp
 			) {
-				// Compare timestamps to determine which comes first
 				if (nextStep.timestamp <= nextMessage.timestamp) {
-					// Add step first
 					this.addStepToHistory(history, nextStep);
 					stepIndex++;
 				} else {
-					// Add message first
 					history.push({
 						role: nextMessage.role as "user" | "assistant" | "system",
 						content: nextMessage.content,
@@ -199,11 +154,9 @@ export class SimpleMemory implements BaseMemory {
 					messageIndex++;
 				}
 			} else if (nextStep?.timestamp) {
-				// Only steps remaining
 				this.addStepToHistory(history, nextStep);
 				stepIndex++;
 			} else if (nextMessage?.timestamp) {
-				// Only messages remaining
 				history.push({
 					role: nextMessage.role as "user" | "assistant" | "system",
 					content: nextMessage.content,
@@ -220,7 +173,6 @@ export class SimpleMemory implements BaseMemory {
 		step: MemoryStep,
 	): void {
 		if (step.type === "tool" && step.action && step.parameter) {
-			// Tool call (assistant)
 			const toolCallMessage: ChatCompletionAssistantMessageParam = {
 				role: "assistant",
 				content: null,
@@ -237,7 +189,6 @@ export class SimpleMemory implements BaseMemory {
 			};
 			history.push(toolCallMessage);
 
-			// Tool result (tool role)
 			const toolResultMessage: ChatCompletionToolMessageParam = {
 				role: "tool",
 				content:
@@ -284,14 +235,6 @@ export class SimpleMemory implements BaseMemory {
 		}
 
 		return history;
-	}
-
-	/**
-	 * Convert steps to OpenAI tool calling format
-	 */
-	toOpenAIConversationHistory(): ChatCompletionMessageParam[] {
-		// Now that toConversationHistory is chronological, we can just use it directly
-		return this.toConversationHistory();
 	}
 
 	private parameterToYAML(p: any): string {

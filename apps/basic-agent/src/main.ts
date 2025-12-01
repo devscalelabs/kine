@@ -17,17 +17,36 @@ const getWeather = defineTool({
 		humidity: z.number().optional(),
 	}),
 	execute: async ({ location, units }) => {
+		// Generate random weather conditions
+		const conditions = [
+			"sunny",
+			"cloudy",
+			"rainy",
+			"partly cloudy",
+			"overcast",
+			"stormy",
+		];
+		const randomCondition =
+			conditions[Math.floor(Math.random() * conditions.length)];
+
+		// Generate random temperature variation (-5 to +5 degrees)
+		const baseTemp = units === "celsius" ? 22 : 72;
+		const tempVariation = Math.floor(Math.random() * 11) - 5;
+		const randomTemp = baseTemp + tempVariation;
+
+		// Generate random humidity (40-80%)
+		const randomHumidity = Math.floor(Math.random() * 41) + 40;
+
 		return {
 			location: location,
-			temperature: units === "celsius" ? 22 : 72,
-			condition: "sunny",
-			humidity: 65,
+			temperature: randomTemp,
+			condition: randomCondition,
+			humidity: randomHumidity,
 		};
 	},
 });
 
 async function main() {
-	// Create a memory instance to store conversation history and steps
 	const memory = new SimpleMemory({
 		maxMessages: 100,
 		maxSteps: 50,
@@ -37,7 +56,7 @@ async function main() {
 		id: "AI Agent",
 		model: "meta-llama/llama-4-maverick",
 		tools: [getWeather],
-		memory: memory, // Inject memory into the agent
+		memory: memory,
 	});
 
 	const response = await agent.run(
