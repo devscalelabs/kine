@@ -1,66 +1,14 @@
-import { Agent } from "@devscalelabs/kine/agent";
-import { SimpleMemory } from "@devscalelabs/kine/memory";
-import { defineTool } from "@devscalelabs/kine/tool";
-import { z } from "zod";
 import "dotenv/config";
 
-const getWeather = defineTool({
-	id: "get_weather",
-	description: "Get current weather information for a location",
-	input: z.object({
-		location: z.string().describe("City name or coordinates"),
-		units: z.enum(["celsius", "fahrenheit"]).optional().default("celsius"),
-	}),
-	output: z.object({
-		temperature: z.number(),
-		condition: z.string(),
-		humidity: z.number().optional(),
-	}),
-	execute: async ({ location, units }) => {
-		const conditions = [
-			"sunny",
-			"cloudy",
-			"rainy",
-			"partly cloudy",
-			"overcast",
-			"stormy",
-		];
-		const randomCondition =
-			conditions[Math.floor(Math.random() * conditions.length)];
-
-		const baseTemp = units === "celsius" ? 22 : 72;
-		const tempVariation = Math.floor(Math.random() * 11) - 5;
-		const randomTemp = baseTemp + tempVariation;
-
-		const randomHumidity = Math.floor(Math.random() * 41) + 40;
-
-		return {
-			location: location,
-			temperature: randomTemp,
-			condition: randomCondition,
-			humidity: randomHumidity,
-		};
-	},
-});
+import { example01 } from "./example01";
+import { example02 } from "./example02";
 
 async function main() {
-	const memory = new SimpleMemory({
-		maxMessages: 100,
-		maxSteps: 50,
-	});
+	console.log("Running Example 01: Weather Agent");
+	await example01();
 
-	const agent = new Agent({
-		id: "AI Agent",
-		model: "alibaba/tongyi-deepresearch-30b-a3b",
-		tools: [getWeather],
-		memory: memory,
-	});
-
-	const response = await agent.run(
-		"What's the weather like in New York in Celcius and Tokyo in Fahrenheit?",
-	);
-
-	console.log(response.getRawResponse().response);
+	console.log("Running Example 02: Calculator Agent");
+	await example02();
 }
 
 main().catch(console.error);
