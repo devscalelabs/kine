@@ -19,7 +19,7 @@ export class Agent {
 		this.config = config;
 		this.stepsManager = new StepsManager(maxSteps);
 		this.memory = config.memory || null;
-		this.debug = debug ?? process.env.KINE_DEBUG === "true" ?? false;
+		this.debug = debug ?? (process.env.KINE_DEBUG === "true" || false);
 		this.openai = new OpenAI({
 			apiKey: this.config.apiKey ?? process.env.LLM_API_KEY,
 			baseURL: this.config.baseURL ?? process.env.LLM_BASE_URL,
