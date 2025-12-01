@@ -3,9 +3,12 @@ import type { ChatCompletionMessageParam } from "openai/resources";
 import { parse } from "yaml";
 
 import logger from "./logger";
+import { Response } from "./response";
 import { StepsManager } from "./steps";
 import { getToolMetadata } from "./tool";
 import type { AgentConfig, AgentRuntime, BaseMemory, Tool } from "./types";
+
+export { Response } from "./response";
 
 export class Agent {
 	private openai: OpenAI;
@@ -15,11 +18,11 @@ export class Agent {
 	private memory: BaseMemory | null = null;
 	private debug: boolean;
 
-	constructor(config: AgentConfig, maxSteps: number = 10, debug?: boolean) {
+	constructor(config: AgentConfig) {
 		this.config = config;
-		this.stepsManager = new StepsManager(maxSteps);
+		this.stepsManager = new StepsManager(config.maxSteps ?? 10);
 		this.memory = config.memory || null;
-		this.debug = debug ?? (process.env.KINE_DEBUG === "true" || false);
+		this.debug = config.debug ?? (process.env.KINE_DEBUG === "true" || false);
 		this.openai = new OpenAI({
 			apiKey: this.config.apiKey ?? process.env.LLM_API_KEY,
 			baseURL: this.config.baseURL ?? process.env.LLM_BASE_URL,
@@ -65,7 +68,7 @@ export class Agent {
 		return `Available tools:\n${toolDescriptions}\n  - finalize: End task and provide final answer`;
 	}
 
-	async run(prompt: string): Promise<AgentRuntime> {
+	async run(prompt: string): Promise<Response> {
 		const systemPrompt = this.buildSystemPrompt();
 		this.stepsManager.initialize();
 
@@ -131,10 +134,12 @@ export class Agent {
 			this.memory.addMessage("assistant", finalResponse);
 		}
 
-		return {
+		const agentRuntime: AgentRuntime = {
 			response: finalResponse,
 			steps: this.stepsManager.getAllSteps(),
 		};
+
+		return new Response(agentRuntime);
 	}
 
 	private async singleStep(systemPrompt: string, task: string) {

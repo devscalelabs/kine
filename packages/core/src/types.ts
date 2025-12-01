@@ -19,6 +19,8 @@ export interface AgentConfig {
 	baseURL?: string;
 	tools?: Tool[];
 	memory?: BaseMemory;
+	maxSteps?: number;
+	debug?: boolean;
 }
 
 export interface BaseMemory {

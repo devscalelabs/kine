@@ -7,16 +7,16 @@ export default defineConfig({
 		tool: "src/tool.ts",
 		memory: "src/memory.ts",
 	},
-	format: ["esm", "cjs"],
+	format: ["esm"],
 	dts: true,
 	sourcemap: true,
 	clean: true,
 	splitting: false,
 	minify: false,
-	outExtension({ format }) {
+	outExtension() {
 		return {
-			js: format === "esm" ? ".mjs" : ".js",
-			dts: format === "esm" ? ".d.mts" : ".d.ts",
+			js: ".mjs",
+			dts: ".d.mts",
 		};
 	},
 	external: ["openai", "pino", "pino-pretty", "playwright", "yaml", "zod"],

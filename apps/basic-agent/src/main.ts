@@ -17,7 +17,6 @@ const getWeather = defineTool({
 		humidity: z.number().optional(),
 	}),
 	execute: async ({ location, units }) => {
-		// Generate random weather conditions
 		const conditions = [
 			"sunny",
 			"cloudy",
@@ -29,12 +28,10 @@ const getWeather = defineTool({
 		const randomCondition =
 			conditions[Math.floor(Math.random() * conditions.length)];
 
-		// Generate random temperature variation (-5 to +5 degrees)
 		const baseTemp = units === "celsius" ? 22 : 72;
 		const tempVariation = Math.floor(Math.random() * 11) - 5;
 		const randomTemp = baseTemp + tempVariation;
 
-		// Generate random humidity (40-80%)
 		const randomHumidity = Math.floor(Math.random() * 41) + 40;
 
 		return {
@@ -54,7 +51,7 @@ async function main() {
 
 	const agent = new Agent({
 		id: "AI Agent",
-		model: "meta-llama/llama-4-maverick",
+		model: "alibaba/tongyi-deepresearch-30b-a3b",
 		tools: [getWeather],
 		memory: memory,
 	});
@@ -62,10 +59,8 @@ async function main() {
 	const response = await agent.run(
 		"What's the weather like in New York in Celcius and Tokyo in Fahrenheit?",
 	);
-	console.log(response.response);
 
-	console.log("\n=== MEMORY CONVERSATION HISTORY ===");
-	console.log(JSON.stringify(memory.toConversationHistory(), null, 2));
+	console.log(response.getRawResponse().response);
 }
 
 main().catch(console.error);

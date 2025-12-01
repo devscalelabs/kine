@@ -1,71 +1,71 @@
 {
-	"name": "@devscalelabs/kine",
-	"version": "0.0.1",
-	"description": "A core package for Kine - AI-powered automation framework",
-	"main": "./dist/index.js",
-	"module": "./dist/index.mjs",
-	"types": "./dist/index.d.ts",
-	"type": "module",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.mjs",
-			"require": "./dist/index.js"
-		},
-		"./agent": {
-			"types": "./dist/agent.d.ts",
-			"import": "./dist/agent.mjs",
-			"require": "./dist/agent.js"
-		},
-		"./tool": {
-			"types": "./dist/tool.d.ts",
-			"import": "./dist/tool.mjs",
-			"require": "./dist/tool.js"
-		},
-		"./memory": {
-			"types": "./dist/memory.d.ts",
-			"import": "./dist/memory.mjs",
-			"require": "./dist/memory.js"
-		}
-	},
-	"files": [
-		"dist",
-		"README.md",
-		"LICENSE"
-	],
-	"scripts": {
-		"build": "tsup",
-		"dev": "tsup --watch",
-		"prepublishOnly": "npm run build",
-		"clean": "rm -rf dist",
-		"typecheck": "tsc --noEmit",
-		"lint": "echo \"No linter configured\"",
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"pub:beta": "npm version prerelease --preid=beta && npm publish --tag beta",
-		"pub:release": "npm version patch && npm publish"
-	},
-	"keywords": [
-		"ai",
-		"automation",
-		"agent",
-		"typescript",
-		"openai"
-	],
-	"author": "Devscale Labs",
-	"license": "MIT",
-	"packageManager": "pnpm@10.23.0",
-	"devDependencies": {
-		"@types/node": "^24.10.1",
-		"tsup": "^8.5.1",
-		"tsx": "^4.20.6",
-		"typescript": "^5.9.3"
-	},
-	"dependencies": {
-		"openai": "^6.9.1",
-		"pino": "^10.1.0",
-		"pino-pretty": "^13.1.2",
-		"playwright": "^1.57.0",
-		"yaml": "^2.8.2",
-		"zod": "^4.1.13"
-	}
+    "name": "@devscalelabs/kine",
+    "version": "0.0.1",
+    "description": "A core package for Kine - AI-powered automation framework",
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js"
+        },
+        "./agent": {
+            "types": "./dist/agent.d.ts",
+            "import": "./dist/agent.mjs",
+            "require": "./dist/agent.js"
+        },
+        "./tool": {
+            "types": "./dist/tool.d.ts",
+            "import": "./dist/tool.mjs",
+            "require": "./dist/tool.js"
+        },
+        "./memory": {
+            "types": "./dist/memory.d.ts",
+            "import": "./dist/memory.mjs",
+            "require": "./dist/memory.js"
+        }
+    },
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "prepublishOnly": "npm run build",
+        "clean": "rm -rf dist",
+        "typecheck": "tsc --noEmit",
+        "lint": "echo \"No linter configured\"",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "pub:beta": "npm version prerelease --preid=beta && npm publish --tag beta",
+        "pub:release": "npm version patch && npm publish"
+    },
+    "keywords": [
+        "ai",
+        "automation",
+        "agent",
+        "typescript",
+        "openai"
+    ],
+    "author": "Devscale Labs",
+    "license": "MIT",
+    "packageManager": "pnpm@10.23.0",
+    "devDependencies": {
+        "@types/node": "^24.10.1",
+        "tsup": "^8.5.1",
+        "tsx": "^4.20.6",
+        "typescript": "^5.9.3"
+    },
+    "dependencies": {
+        "openai": "^6.9.1",
+        "pino": "^10.1.0",
+        "pino-pretty": "^13.1.2",
+        "playwright": "^1.57.0",
+        "yaml": "^2.8.2",
+        "zod": "^4.1.13"
+    }
 }
