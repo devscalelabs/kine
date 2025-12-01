@@ -13,6 +13,8 @@ This package contains the core functionality of Kine, a modular framework that e
 - 💾 **Memory Management**: Built-in conversation history and state management
 - 🔒 **Type Safety**: Full TypeScript support with Zod validation
 - 🧠 **ReAct Pattern**: Structured reasoning and acting loop with YAML communication
+- 📊 **Token Usage Tracking**: Built-in token usage and latency tracking
+- 🔄 **Streaming Support**: Stream agent execution steps in real-time
 
 ## Installation
 
@@ -57,7 +59,7 @@ const agent = new Agent({
 
 // Run the agent
 const result = await agent.run("What is the weather in New York?");
-console.log(result.response); // "The current weather in New York is 72°F and sunny."
+console.log(result.getFinalAnswer()); // "The current weather in New York is 72°F and sunny."
 ```
 
 ## Core Components
@@ -67,25 +69,51 @@ console.log(result.response); // "The current weather in New York is 72°F and s
 The main agent class that orchestrates conversations and tool usage using a ReAct pattern.
 
 ```typescript
-import { Agent } from '@devscalelabs/kine';
+import { Agent } from "@devscalelabs/kine";
 
 const agent = new Agent({
-  id: 'my-agent',              // Unique identifier
-  description: 'AI assistant', // Agent description
-  model: 'gpt-4',              // AI model
-  apiKey: 'your-api-key',      // or use LLM_API_KEY env var
-  baseURL: 'custom-api-url',   // Optional custom base URL
+  id: "my-agent",              // Unique identifier
+  description: "AI assistant", // Agent description
+  model: "gpt-4",              // AI model
+  apiKey: "your-api-key",      // or use LLM_API_KEY env var
+  baseURL: "custom-api-url",   // Optional custom base URL
   tools: [...],                // Array of tools
   maxSteps: 10,                // Maximum steps (default: 10)
-  debug: true                  // Enable debug logging
+  debug: true,                 // Enable debug logging
+  memory: memory,              // Optional memory instance
 });
 ```
 
 #### Agent Methods
 
-- `run(prompt: string)`: Execute the agent with a given prompt
+- `run(prompt: string)`: Execute the agent with a given prompt and return a `Response`
+- `runStreaming(prompt: string)`: Execute the agent with streaming support, returns an async generator that yields steps and resolves to a `Response`
 - `registerTool(tool: Tool)`: Register a new tool with the agent
 - `getDebug()`: Get the debug status
+
+#### Streaming Example
+
+```typescript
+const agent = new Agent({
+  id: "streaming-agent",
+  model: "gpt-4",
+  tools: [weatherTool],
+});
+
+const stream = agent.runStreaming("What is the weather in New York?");
+
+let finalResponse: Response | undefined;
+let result;
+while (!(result = await stream.next()).done) {
+  const step = result.value;
+  console.log(`[STREAM] Action: ${step.action}`);
+  console.log(`[STREAM] Result:`, step.result);
+}
+
+// The final value is the Response object
+finalResponse = result.value;
+console.log(finalResponse.getFinalAnswer());
+```
 
 ### Tools
 
@@ -122,8 +150,8 @@ The framework includes a simple memory implementation for managing conversation 
 import { SimpleMemory } from "@devscalelabs/kine";
 
 const memory = new SimpleMemory({
-  maxMessages: 100, // Maximum messages to store
-  maxSteps: 50, // Maximum steps to store
+  maxMessages: 100, // Maximum messages to store (default: 1000)
+  maxSteps: 50, // Maximum steps to store (default: 100)
 });
 
 // Use with agent
@@ -133,16 +161,20 @@ const agent = new Agent({
 });
 ```
 
-Memory methods:
+#### Memory Methods
 
 - `addMessage(role, content, metadata?)`: Add a message to memory
 - `addStep(step, stepNumber)`: Add a step to memory
 - `getMessages()`: Retrieve all messages
 - `getSteps()`: Retrieve all steps
+- `getRecentMessages(count)`: Get the most recent N messages
+- `getRecentSteps(count)`: Get the most recent N steps
 - `clearMessages()`: Clear message history
 - `clearSteps()`: Clear step history
 - `clearAll()`: Clear all memory
-- `getStats()`: Get memory statistics
+- `getStats()`: Get memory statistics (totalMessages, totalSteps, userMessages, assistantMessages, systemMessages, agentSteps, toolSteps, errorSteps)
+- `toConversationHistory()`: Convert memory to OpenAI conversation format
+- `stepsToConversationHistory()`: Convert steps to conversation format
 
 ### Response
 
@@ -162,7 +194,26 @@ console.log(result.beautify());
 
 // Get raw response data
 console.log(result.getRawResponse());
+
+// Get token usage (aggregate across all steps)
+console.log(result.getTokenUsage());
+
+// Get metadata for a specific step
+console.log(result.getStepMetadata(0));
+
+// Get formatted steps string
+console.log(result.getFormattedSteps());
 ```
+
+#### Response Methods
+
+- `getFinalAnswer()`: Get the final answer string
+- `getSummary()`: Get a formatted summary with step counts and token usage
+- `beautify()`: Get beautified output with all steps, tokens, and latency information
+- `getRawResponse()`: Get raw `AgentRuntime` object
+- `getTokenUsage()`: Get aggregate token usage across all steps
+- `getStepMetadata(index)`: Get metadata (tokens, latency, model, etc.) for a specific step
+- `getFormattedSteps()`: Get formatted steps as a string
 
 ## ReAct Pattern
 
@@ -181,6 +232,26 @@ observation:
 thought: "Now I can provide final answer"
 action: "finalize"
 final_answer: "The current weather in New York is 72°F and sunny"
+```
+
+## Package Exports
+
+The package supports both main exports and subpath exports:
+
+```typescript
+// Main exports
+import {
+  Agent,
+  SimpleMemory,
+  Response,
+  defineTool,
+  z,
+} from "@devscalelabs/kine";
+
+// Subpath exports
+import { Agent } from "@devscalelabs/kine/agent";
+import { SimpleMemory } from "@devscalelabs/kine/memory";
+import { defineTool } from "@devscalelabs/kine/tool";
 ```
 
 ## Environment Variables
@@ -224,8 +295,12 @@ interface BaseMemory {
     metadata?: Record<string, any>
   ): void;
   getMessages(): MemoryMessage[];
+  getRecentMessages(count: number): MemoryMessage[];
   addStep(step: Omit<Step, "meta">, stepNumber: number): void;
   getSteps(): MemoryStep[];
+  getRecentSteps(count: number): MemoryStep[];
+  clearMessages(): void;
+  clearSteps(): void;
   clearAll(): void;
   getStats(): Record<string, number>;
 }
@@ -233,6 +308,7 @@ interface BaseMemory {
 interface AgentRuntime {
   response: string;
   steps: Step[];
+  usage?: AggregateUsage;
 }
 
 interface Step {
@@ -241,7 +317,46 @@ interface Step {
   action?: string;
   parameter?: any;
   result?: any;
-  meta?: { ctxSwitches: number };
+  meta?: StepMeta;
+}
+
+interface StepMeta {
+  ctxSwitches: number;
+  tokens?: TokenUsage;
+  latency?: number;
+  model?: string;
+  finish_reason?: string;
+}
+
+interface TokenUsage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
+interface AggregateUsage {
+  total_prompt_tokens: number;
+  total_completion_tokens: number;
+  total_tokens: number;
+  total_latency: number;
+  llm_calls: number;
+}
+
+interface MemoryMessage {
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp: Date;
+  metadata?: Record<string, any>;
+}
+
+interface MemoryStep extends Step {
+  timestamp: Date;
+  stepNumber: number;
+}
+
+interface MemoryConfig {
+  maxMessages?: number;
+  maxSteps?: number;
 }
 ```
 
@@ -254,6 +369,7 @@ The framework includes robust error handling for:
 - Tool execution failures
 - Schema validation errors
 - Tool not found scenarios
+- Empty final answers
 
 ## Development
 
