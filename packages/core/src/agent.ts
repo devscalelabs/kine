@@ -3,6 +3,7 @@ import type { ChatCompletionMessageParam } from "openai/resources";
 import { parse } from "yaml";
 
 import logger from "./logger";
+import { MetadataAggregator, type TokenUsage } from "./metadata";
 import { Response } from "./response";
 import { StepsManager } from "./steps";
 import { getToolMetadata } from "./tool";
@@ -81,30 +82,31 @@ export class Agent {
 		while (!this.stepsManager.hasReachedMaxSteps()) {
 			const stepOutput = await this.singleStep(systemPrompt, prompt);
 
-			this.stepsManager.addStep({
-				type: stepOutput.type,
-				content: stepOutput.content,
-				action: stepOutput.action,
-				parameter: stepOutput.parameter,
-				result: stepOutput.result,
-			});
+			this.stepsManager.addStep(
+				{
+					type: stepOutput.type,
+					content: stepOutput.content,
+					action: stepOutput.action,
+					parameter: stepOutput.parameter,
+					result: stepOutput.result,
+				},
+				stepOutput.llmMetadata,
+			);
 
 			if (this.memory) {
-				this.memory.addStep(
-					{
-						type: stepOutput.type,
-						content: stepOutput.content,
-						action: stepOutput.action,
-						parameter: stepOutput.parameter,
-						result: stepOutput.result,
-					},
-					this.stepsManager.getStepCount(),
-				);
+				// Get the last added step which includes metadata
+				const steps = this.stepsManager.getAllSteps();
+				const lastStep = steps[steps.length - 1];
+				if (lastStep) {
+					this.memory.addStep(lastStep, this.stepsManager.getStepCount());
+				}
 			}
 
 			if (this.debug) {
 				logger.debug(
-					`[${this.config.id}] Step ${this.stepsManager.getStepCount()}: ${stepOutput.action} - ${stepOutput.content}`,
+					`[${this.config.id}] Step ${this.stepsManager.getStepCount()}: ${
+						stepOutput.action
+					} - ${stepOutput.content}`,
 				);
 			}
 
@@ -124,7 +126,9 @@ export class Agent {
 		if (!finalResponse) {
 			if (this.debug) {
 				logger.debug(
-					`[${this.config.id}] Timeout after ${this.stepsManager.getMaxSteps()} steps`,
+					`[${
+						this.config.id
+					}] Timeout after ${this.stepsManager.getMaxSteps()} steps`,
 				);
 			}
 			finalResponse = `Agent timed out (max ${this.stepsManager.getMaxSteps()} steps).`;
@@ -134,9 +138,13 @@ export class Agent {
 			this.memory.addMessage("assistant", finalResponse);
 		}
 
+		const steps = this.stepsManager.getAllSteps();
+		const usage = MetadataAggregator.aggregate(steps);
+
 		const agentRuntime: AgentRuntime = {
 			response: finalResponse,
-			steps: this.stepsManager.getAllSteps(),
+			steps,
+			usage,
 		};
 
 		return new Response(agentRuntime);
@@ -151,10 +159,35 @@ export class Agent {
 		const history = this.stepsManager.buildConversationHistory();
 		messages.push(...history);
 
+		const startTime = Date.now();
 		const completion = await this.openai.chat.completions.create({
 			messages,
 			model: this.config.model,
 		});
+		const latency = Date.now() - startTime;
+
+		// Extract metadata from OpenAI response
+		const llmMetadata: {
+			tokens?: TokenUsage;
+			latency: number;
+			model: string;
+			finish_reason?: string;
+		} = {
+			latency,
+			model: completion.model,
+		};
+
+		if (completion.usage) {
+			llmMetadata.tokens = {
+				prompt_tokens: completion.usage.prompt_tokens,
+				completion_tokens: completion.usage.completion_tokens,
+				total_tokens: completion.usage.total_tokens,
+			};
+		}
+
+		if (completion.choices[0]?.finish_reason) {
+			llmMetadata.finish_reason = completion.choices[0].finish_reason;
+		}
 
 		const rawMsg = completion.choices[0]?.message.content ?? "";
 		let parsed: any;
@@ -167,7 +200,10 @@ export class Agent {
 				content: "Invalid YAML format",
 				action: undefined,
 				parameter: undefined,
-				result: `YAML parsing error: ${error instanceof Error ? error.message : String(error)}. Please respond with valid YAML only.`,
+				result: `YAML parsing error: ${
+					error instanceof Error ? error.message : String(error)
+				}. Please respond with valid YAML only.`,
+				llmMetadata,
 			};
 		}
 
@@ -182,6 +218,7 @@ export class Agent {
 				action: undefined,
 				parameter: undefined,
 				result: "GPT skipped 'action'",
+				llmMetadata,
 			};
 		}
 
@@ -196,6 +233,7 @@ export class Agent {
 					parameter: parsed.parameter,
 					result:
 						"final_answer cannot be empty. Provide a substantive response.",
+					llmMetadata,
 				};
 			}
 
@@ -205,6 +243,7 @@ export class Agent {
 				action: "finalize",
 				parameter: parsed.parameter,
 				result: finalAnswer,
+				llmMetadata,
 			};
 		}
 
@@ -216,7 +255,10 @@ export class Agent {
 				content: parsed.thought || "",
 				action: parsed.action,
 				parameter: parsed.parameter,
-				result: `Tool not found: ${parsed.action}. Available: ${Array.from(this.tools.keys()).join(", ")}`,
+				result: `Tool not found: ${parsed.action}. Available: ${Array.from(
+					this.tools.keys(),
+				).join(", ")}`,
+				llmMetadata,
 			};
 		}
 
@@ -231,6 +273,7 @@ export class Agent {
 				action: parsed.action,
 				parameter: validatedInput,
 				result: validatedOutput,
+				llmMetadata,
 			};
 		} catch (error: any) {
 			const errorMessage =
@@ -244,6 +287,7 @@ export class Agent {
 					? validatedInput.data
 					: parsed.parameter,
 				result: `Tool execution failed: ${errorMessage}. Please try again with different parameters.`,
+				llmMetadata,
 			};
 		}
 	}
@@ -253,7 +297,9 @@ export class Agent {
 
 		return `
 		Your id: ${this.config.id}
-    Your description: ${this.config.description || "AI Agent built with Kine by Devscalelabs"}
+    Your description: ${
+			this.config.description || "AI Agent built with Kine by Devscalelabs"
+		}
 
     You are an AI agent operating in a strict ReAct loop: THINK → ACT → OBSERVE → REPEAT.
 
@@ -280,7 +326,9 @@ export class Agent {
     # Example 1: Simple query (no tools needed)
     thought: "User asked for introduction. I can answer directly without tools."
     action: "finalize"
-    final_answer: "I am ${this.config.id}, an AI agent built with Kine by Devscalelabs. I can help you with various tasks using my available tools."
+    final_answer: "I am ${
+			this.config.id
+		}, an AI agent built with Kine by Devscalelabs. I can help you with various tasks using my available tools."
 
     # Example 2: Need to use tool first
     thought: "User wants current weather. I need to use the weather tool."

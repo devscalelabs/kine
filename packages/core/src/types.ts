@@ -1,15 +1,21 @@
 import type { z } from "zod";
 
+import type { AggregateUsage, StepMeta } from "./metadata";
+
 export type Step = {
 	type: "agent" | "error" | "tool";
 	content: string;
 	action?: string;
 	parameter?: any;
 	result?: any;
-	meta?: { ctxSwitches: number } | undefined;
+	meta?: StepMeta;
 };
 
-export type AgentRuntime = { response: string; steps: Step[] };
+export type AgentRuntime = {
+	response: string;
+	steps: Step[];
+	usage?: AggregateUsage;
+};
 
 export interface AgentConfig {
 	id: string;
@@ -35,7 +41,7 @@ export interface BaseMemory {
 	clearMessages(): void;
 
 	// Step management
-	addStep(step: Omit<Step, "meta">, stepNumber: number): void;
+	addStep(step: Step, stepNumber: number): void;
 	getSteps(): MemoryStep[];
 	getRecentSteps(count: number): MemoryStep[];
 	clearSteps(): void;

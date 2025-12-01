@@ -1,4 +1,12 @@
+import type { StepMeta, TokenUsage } from "./metadata";
 import type { Step } from "./types";
+
+type LLMMetadata = {
+	tokens?: TokenUsage;
+	latency?: number;
+	model?: string;
+	finish_reason?: string;
+};
 
 export class StepsManager {
 	private steps: Step[] = [];
@@ -20,10 +28,22 @@ export class StepsManager {
 		];
 	}
 
-	addStep(step: Omit<Step, "meta">): void {
+	addStep(step: Omit<Step, "meta">, llmMetadata?: LLMMetadata): void {
+		const meta: StepMeta = {
+			ctxSwitches: this.steps[0]?.meta?.ctxSwitches ?? 0,
+		};
+
+		if (llmMetadata) {
+			if (llmMetadata.tokens) meta.tokens = llmMetadata.tokens;
+			if (llmMetadata.latency) meta.latency = llmMetadata.latency;
+			if (llmMetadata.model) meta.model = llmMetadata.model;
+			if (llmMetadata.finish_reason)
+				meta.finish_reason = llmMetadata.finish_reason;
+		}
+
 		this.steps.push({
 			...step,
-			meta: this.steps[0]?.meta,
+			meta,
 		});
 	}
 

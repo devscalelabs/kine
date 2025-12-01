@@ -44,12 +44,11 @@ export class SimpleMemory implements BaseMemory {
 		}
 	}
 
-	addStep(step: Omit<Step, "meta">, stepNumber: number): void {
+	addStep(step: Step, stepNumber: number): void {
 		const memoryStep: MemoryStep = {
 			...step,
 			timestamp: new Date(),
 			stepNumber,
-			meta: { ctxSwitches: 0 },
 		};
 
 		this.steps.push(memoryStep);

@@ -1,3 +1,4 @@
+import type { AggregateUsage, StepMeta } from "./metadata";
 import type { AgentRuntime } from "./types";
 
 export class Response {
@@ -11,21 +12,30 @@ export class Response {
 		return this.rawResponse;
 	}
 
+	getTokenUsage(): AggregateUsage | undefined {
+		return this.rawResponse.usage;
+	}
+
+	getStepMetadata(index: number): StepMeta | undefined {
+		const step = this.rawResponse.steps?.[index];
+		return step?.meta;
+	}
+
 	beautify(): string {
-		const { response, steps } = this.rawResponse;
+		const { response, steps, usage } = this.rawResponse;
 
 		let output = "";
 
-		output += "=".repeat(80) + "\n";
+		output += `${"=".repeat(80)}\n`;
 		output += "KINE AGENT RESPONSE\n";
-		output += "=".repeat(80) + "\n\n";
+		output += `${"=".repeat(80)}\n\n`;
 
 		output += "Final Answer:\n";
 		output += `${response}\n\n`;
 
 		if (steps && steps.length > 0) {
 			output += "Execution Steps:\n";
-			output += "-".repeat(60) + "\n";
+			output += `${"-".repeat(60)}\n`;
 
 			steps.forEach((step, index) => {
 				const stepNumber = index + 1;
@@ -53,12 +63,20 @@ export class Response {
 					output += `Result: ${resultStr}\n`;
 				}
 
+				if (step.meta?.tokens) {
+					output += `Tokens: ${step.meta.tokens.prompt_tokens} in / ${step.meta.tokens.completion_tokens} out\n`;
+				}
+
+				if (step.meta?.latency) {
+					output += `Latency: ${step.meta.latency}ms\n`;
+				}
+
 				if (index < steps.length - 1) {
-					output += "-".repeat(40) + "\n";
+					output += `${"-".repeat(40)}\n`;
 				}
 			});
 
-			output += "-".repeat(60) + "\n";
+			output += `${"-".repeat(60)}\n`;
 
 			const totalSteps = steps.length;
 			const toolSteps = steps.filter((s) => s.type === "tool").length;
@@ -72,18 +90,35 @@ export class Response {
 			}
 		}
 
-		output += "\n" + "=".repeat(80) + "\n";
+		if (usage) {
+			output += "\nToken Usage:\n";
+			output += `Prompt Tokens: ${usage.total_prompt_tokens}\n`;
+			output += `Completion Tokens: ${usage.total_completion_tokens}\n`;
+			output += `Total Tokens: ${usage.total_tokens}\n`;
+			output += `Total Latency: ${usage.total_latency}ms\n`;
+			output += `LLM Calls: ${usage.llm_calls}\n`;
+		}
+
+		output += `\n${"=".repeat(80)}\n`;
 
 		return output;
 	}
 
 	getSummary(): string {
-		const { response, steps } = this.rawResponse;
+		const { response, steps, usage } = this.rawResponse;
 		const totalSteps = steps?.length || 0;
 		const toolSteps = steps?.filter((s) => s.type === "tool").length || 0;
 		const errorSteps = steps?.filter((s) => s.type === "error").length || 0;
 
-		return `Response: ${response.substring(0, 100)}${response.length > 100 ? "..." : ""} | Steps: ${totalSteps} (Tools: ${toolSteps}, Errors: ${errorSteps})`;
+		let summary = `Response: ${response.substring(0, 100)}${
+			response.length > 100 ? "..." : ""
+		} | Steps: ${totalSteps} (Tools: ${toolSteps}, Errors: ${errorSteps})`;
+
+		if (usage) {
+			summary += ` | Tokens: ${usage.total_tokens}`;
+		}
+
+		return summary;
 	}
 
 	getFinalAnswer(): string {
@@ -96,7 +131,9 @@ export class Response {
 
 		return steps
 			.map((step, index) => {
-				let stepStr = `Step ${index + 1} (${step.type}): ${step.action || "N/A"}`;
+				let stepStr = `Step ${index + 1} (${step.type}): ${
+					step.action || "N/A"
+				}`;
 				if (step.content) {
 					stepStr += `\n  Thought: ${step.content}`;
 				}
@@ -106,6 +143,12 @@ export class Response {
 							? step.result
 							: JSON.stringify(step.result);
 					stepStr += `\n  Result: ${resultStr}`;
+				}
+				if (step.meta?.tokens) {
+					stepStr += `\n  Tokens: ${step.meta.tokens.total_tokens}`;
+				}
+				if (step.meta?.latency) {
+					stepStr += `\n  Latency: ${step.meta.latency}ms`;
 				}
 				return stepStr;
 			})

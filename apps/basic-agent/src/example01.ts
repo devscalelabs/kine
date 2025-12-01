@@ -59,6 +59,16 @@ export async function example01() {
 		"What's the weather like in New York in Celcius and Tokyo in Fahrenheit?",
 	);
 
-	console.log(response.getRawResponse().response);
-	console.log(memory.getMessages());
+	// Final answer
+	console.log(response.getFinalAnswer());
+
+	// Token usage (aggregate)
+	console.log("\nToken Usage:", response.getTokenUsage());
+
+	// Memory steps with metadata (tokens, latency, model, etc.)
+	console.log("\nMemory Steps:");
+	console.log(JSON.stringify(memory.getSteps(), null, 2));
+
+	// Or use beautify() for full formatted output with tokens
+	console.log(response.beautify());
 }
