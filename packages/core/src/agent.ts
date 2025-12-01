@@ -21,8 +21,8 @@ export class Agent {
 		this.memory = config.memory || null;
 		this.debug = debug ?? process.env.KINE_DEBUG === "true" ?? false;
 		this.openai = new OpenAI({
-			apiKey: this.config.apiKey ?? process.env.OPENAI_API_KEY,
-			baseURL: this.config.baseURL ?? process.env.OPENAI_BASE_URL,
+			apiKey: this.config.apiKey ?? process.env.LLM_API_KEY,
+			baseURL: this.config.baseURL ?? process.env.LLM_BASE_URL,
 		});
 
 		if (this.config.tools) {
