@@ -1,63 +1,58 @@
 {
-    "$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
-    "vcs": {
-        "enabled": true,
-        "clientKind": "git",
-        "useIgnoreFile": true
-    },
-    "files": {
-        "ignoreUnknown": false
-    },
-    "formatter": {
-        "enabled": true,
-        "indentStyle": "tab"
-    },
-    "linter": {
-        "enabled": true,
-        "rules": {
-            "recommended": true,
-            "suspicious": {
-                "noExplicitAny": "off",
-                "noImplicitAnyLet": "off",
-                "noAssignInExpressions": "off"
-            },
-            "complexity": {
-                "noStaticOnlyClass": "off"
-            },
-            "style": {
-                "noNonNullAssertion": "off"
-            }
-        }
-    },
-    "javascript": {
-        "formatter": {
-            "quoteStyle": "double"
-        }
-    },
-    "assist": {
-        "enabled": true,
-        "actions": {
-            "source": {
-                "organizeImports": {
-                    "level": "on",
-                    "options": {
-                        "groups": [
-                            ":PACKAGE:",
-                            ":BLANK_LINE:",
-                            ["@/assets/**"],
-                            ":BLANK_LINE:",
-                            [
-                                "@/common/**",
-                                "@/lib/**",
-                                "@/api/**",
-                                "@/utils/**"
-                            ],
-                            ":BLANK_LINE:",
-                            ["./**"]
-                        ]
-                    }
-                }
-            }
-        }
-    }
+	"$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"ignoreUnknown": false
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab"
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"suspicious": {
+				"noExplicitAny": "off",
+				"noImplicitAnyLet": "off",
+				"noAssignInExpressions": "off"
+			},
+			"complexity": {
+				"noStaticOnlyClass": "off"
+			},
+			"style": {
+				"noNonNullAssertion": "off"
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double"
+		}
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": {
+					"level": "on",
+					"options": {
+						"groups": [
+							":PACKAGE:",
+							":BLANK_LINE:",
+							["@/assets/**"],
+							":BLANK_LINE:",
+							["@/common/**", "@/lib/**", "@/api/**", "@/utils/**"],
+							":BLANK_LINE:",
+							["./**"]
+						]
+					}
+				}
+			}
+		}
+	}
 }

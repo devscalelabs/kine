@@ -1,6 +1,9 @@
 import logger from "../utils/logger";
 import type { LLMProvider, LLMMessage } from "../providers/llm-provider";
-import type { ResponseFormatter, StepOutput } from "../response/response-formatter";
+import type {
+	ResponseFormatter,
+	StepOutput,
+} from "../response/response-formatter";
 import type { ToolManager } from "../tools/tool-manager";
 import type { ConversationOrchestrator } from "./conversation-orchestrator";
 
