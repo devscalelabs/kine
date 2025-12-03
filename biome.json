@@ -23,6 +23,9 @@
 			},
 			"complexity": {
 				"noStaticOnlyClass": "off"
+			},
+			"style": {
+				"noNonNullAssertion": "off"
 			}
 		}
 	},

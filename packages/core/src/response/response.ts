@@ -1,5 +1,5 @@
-import type { AggregateUsage, StepMeta } from "./metadata";
-import type { AgentRuntime } from "./types";
+import type { AggregateUsage, StepMeta } from "../memory/metadata";
+import type { AgentRuntime } from "../types";
 
 export class Response {
 	private rawResponse: AgentRuntime;

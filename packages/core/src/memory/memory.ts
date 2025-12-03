@@ -10,7 +10,7 @@ import type {
 	MemoryMessage,
 	MemoryStep,
 	Step,
-} from "./types";
+} from "../types";
 
 export class SimpleMemory implements BaseMemory {
 	private messages: MemoryMessage[] = [];

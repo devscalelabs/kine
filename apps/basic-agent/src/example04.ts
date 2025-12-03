@@ -81,8 +81,6 @@ export async function example04() {
 		memory: memory,
 	});
 
-	console.log("🤖 Starting conversational agent...\n");
-
 	const conversations = [
 		"Hi! What's your name and what can you help me with?",
 		"What's the weather like in Tokyo?",
@@ -94,43 +92,13 @@ export async function example04() {
 
 	for (let i = 0; i < conversations.length; i++) {
 		const userMessage = conversations[i];
-		console.log(`👤 User [${i + 1}]: ${userMessage}`);
-
-		console.log("🤔 Assistant is thinking...");
 
 		const stream = agent.runStreaming(userMessage);
 
 		let result;
 
 		while (!(result = await stream.next()).done) {
-			const step = result.value;
-			if (step.content) {
-				console.log(`   💭 ${step.content}`);
-			}
-			if (step.action && step.action !== "finalize") {
-				console.log(`   🔧 Using tool: ${step.action}`);
-			}
-			if (
-				step.result !== undefined &&
-				step.result !== "pending" &&
-				step.action !== "finalize"
-			) {
-				console.log(`   📊 Result: ${JSON.stringify(step.result)}`);
-			}
-		}
-
-		const finalResponse = result.value;
-		console.log(`🤖 Assistant: ${finalResponse.getFinalAnswer()}\n`);
-
-		if (i < conversations.length - 1) {
-			console.log("---\n");
+			console.log(result.value);
 		}
 	}
-
-	console.log("📊 Conversation Summary:");
-	console.log(`Total messages exchanged: ${memory.getMessages().length}`);
-	console.log(`Total steps executed: ${memory.getSteps().length}`);
-	console.log(
-		`Token usage: ${JSON.stringify(memory.getTokenUsage(), null, 2)}`,
-	);
 }

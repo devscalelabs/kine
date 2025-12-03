@@ -1,5 +1,5 @@
 import type { StepMeta, TokenUsage } from "./metadata";
-import type { Step } from "./types";
+import type { Step } from "../types";
 
 type LLMMetadata = {
 	tokens?: TokenUsage;

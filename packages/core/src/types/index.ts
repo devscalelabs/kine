@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-import type { AggregateUsage, StepMeta } from "./metadata";
+import type { AggregateUsage, StepMeta } from "../memory/metadata";
 
 export type Step = {
 	type: "agent" | "error" | "tool";
