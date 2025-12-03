@@ -1,21 +1,22 @@
 import { getToolMetadata } from "./tool";
 import type { Tool } from "../types";
-import type { DebugLogger } from "../utils/debug-logger";
+import { createDebugLogger } from "../utils/debug-logger";
 
 export class ToolManager {
 	private tools: Map<string, Tool> = new Map();
-	private debugLogger: DebugLogger | undefined;
+	private logger: ReturnType<typeof createDebugLogger>;
 
-	constructor(agentId: string, debugLogger?: DebugLogger) {
-		this.debugLogger = debugLogger;
+	constructor(agentId: string, debug: boolean = false) {
+		this.logger = createDebugLogger(agentId, debug);
 	}
 
 	registerTool(tool: Tool): void {
 		this.tools.set(tool.name, tool);
 
-		if (this.debugLogger) {
-			this.debugLogger.logToolRegistration(tool.name, getToolMetadata(tool));
-		}
+		this.logger.info(
+			{ tool: tool.name, metadata: getToolMetadata(tool) },
+			"Tool registered successfully",
+		);
 	}
 
 	getTool(name: string): Tool | undefined {
@@ -28,10 +29,6 @@ export class ToolManager {
 
 	getToolNames(): string[] {
 		return Array.from(this.tools.keys());
-	}
-
-	isEnabled(): boolean {
-		return this.debugLogger?.isEnabled() || false;
 	}
 
 	getToolsList(): string {

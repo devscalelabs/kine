@@ -1,11 +1,8 @@
 import type { AggregateUsage, StepMeta } from "../memory/metadata";
 import type { AgentRuntime } from "../types";
-import { TerminalUI } from "../ui/terminal-ui";
-import type { DebugLogger } from "../utils/debug-logger";
 
 export class Response {
 	private rawResponse: AgentRuntime;
-	private debugUI?: TerminalUI;
 
 	constructor(agentRuntime: AgentRuntime) {
 		this.rawResponse = agentRuntime;
@@ -156,12 +153,5 @@ export class Response {
 				return stepStr;
 			})
 			.join("\n\n");
-	}
-
-	debug(debugLogger?: DebugLogger): void {
-		if (!this.debugUI) {
-			this.debugUI = new TerminalUI(this.rawResponse, debugLogger);
-		}
-		this.debugUI.render();
 	}
 }

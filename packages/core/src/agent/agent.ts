@@ -8,7 +8,7 @@ import type { ResponseFormatter } from "../response/response-formatter";
 import { XMLResponseFormatter } from "../response/xml-response-formatter";
 import { ToolManager } from "../tools/tool-manager";
 import type { AgentConfig, AgentRuntime, Tool } from "../types";
-import { DebugLogger } from "../utils/debug-logger";
+import { createDebugLogger } from "../utils/debug-logger";
 import { SystemPromptBuilder } from "../utils/system-prompt-builder";
 
 export { Response } from "../response/response";
@@ -22,23 +22,20 @@ export class Agent {
 	private systemPromptBuilder: SystemPromptBuilder;
 	private stepExecutor: StepExecutor;
 	private executionLoop: ExecutionLoop;
-	private debugLogger: DebugLogger;
+	private logger: ReturnType<typeof createDebugLogger>;
 
 	constructor(config: AgentConfig) {
 		this.config = config;
-		this.debugLogger = new DebugLogger(
-			config.id,
-			config.debug ?? (process.env.KINE_DEBUG === "true" || false),
-		);
+		this.logger = createDebugLogger(config.id, config.debug ?? false);
 
 		this.llmProvider = new OpenAIProvider(config.apiKey, config.baseURL);
 		this.responseFormatter = new XMLResponseFormatter();
-		this.toolManager = new ToolManager(config.id, this.debugLogger);
+		this.toolManager = new ToolManager(config.id, config.debug ?? false);
 		this.conversationOrchestrator = new ConversationOrchestrator(
 			config.id,
 			config.maxSteps ?? 10,
 			config.memory || null,
-			this.debugLogger,
+			config.debug ?? false,
 		);
 		this.systemPromptBuilder = new SystemPromptBuilder(
 			config.id,
@@ -51,7 +48,7 @@ export class Agent {
 			this.toolManager,
 			this.conversationOrchestrator,
 			config.model,
-			this.debugLogger,
+			config.debug ?? false,
 		);
 		this.executionLoop = new ExecutionLoop(
 			this.conversationOrchestrator,
@@ -63,14 +60,6 @@ export class Agent {
 				this.registerTool(tool);
 			}
 		}
-	}
-
-	getDebug(): boolean {
-		return this.debugLogger.isEnabled();
-	}
-
-	getDebugLogger(): DebugLogger {
-		return this.debugLogger;
 	}
 
 	registerTool(tool: Tool): void {

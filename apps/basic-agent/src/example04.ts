@@ -79,6 +79,7 @@ export async function example04() {
 		model: "openai/gpt-oss-120b",
 		tools: [getWeather, calculateTip],
 		memory: memory,
+		debug: true,
 	});
 
 	const conversations = [
@@ -92,8 +93,6 @@ export async function example04() {
 
 	for (let i = 0; i < conversations.length; i++) {
 		const userMessage = conversations[i];
-
-		const stream = await agent.run(userMessage);
-		stream.debug();
+		await agent.run(userMessage);
 	}
 }

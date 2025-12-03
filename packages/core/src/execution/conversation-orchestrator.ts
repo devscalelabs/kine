@@ -1,24 +1,24 @@
 import { StepsManager } from "../memory/steps";
 import type { BaseMemory, Step } from "../types";
 import type { StepOutput } from "../response/response-formatter";
-import type { DebugLogger } from "../utils/debug-logger";
+import { createDebugLogger } from "../utils/debug-logger";
 
 export class ConversationOrchestrator {
 	private stepsManager: StepsManager;
 	private memory: BaseMemory | null;
-	private debugLogger: DebugLogger | undefined;
+	private logger: ReturnType<typeof createDebugLogger>;
 	private agentId: string;
 
 	constructor(
 		agentId: string,
 		maxSteps: number,
 		memory: BaseMemory | null,
-		debugLogger?: DebugLogger,
+		debug: boolean = false,
 	) {
 		this.agentId = agentId;
 		this.stepsManager = new StepsManager(maxSteps);
 		this.memory = memory;
-		this.debugLogger = debugLogger;
+		this.logger = createDebugLogger(agentId, debug);
 	}
 
 	initialize(): void {
@@ -50,13 +50,14 @@ export class ConversationOrchestrator {
 			}
 		}
 
-		if (this.debugLogger) {
-			this.debugLogger.logStep(
-				this.stepsManager.getStepCount(),
-				stepOutput.action || "unknown",
-				stepOutput.content,
-			);
-		}
+		this.logger.info(
+			{
+				stepNumber: this.stepsManager.getStepCount(),
+				action: stepOutput.action || "unknown",
+				content: stepOutput.content,
+			},
+			"Agent step executed",
+		);
 	}
 
 	getAllSteps(): Step[] {
@@ -116,14 +117,16 @@ export class ConversationOrchestrator {
 	}
 
 	logTimeout(): void {
-		if (this.debugLogger) {
-			this.debugLogger.logTimeout(this.stepsManager.getMaxSteps());
-		}
+		this.logger.info(
+			{ maxSteps: this.stepsManager.getMaxSteps() },
+			"Agent execution reached maximum step limit",
+		);
 	}
 
 	logFinalization(result: string): void {
-		if (this.debugLogger) {
-			this.debugLogger.logFinalization(result);
-		}
+		this.logger.info(
+			{ finalResult: result },
+			"Agent task completed successfully",
+		);
 	}
 }

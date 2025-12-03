@@ -5,7 +5,7 @@ import type {
 } from "../response/response-formatter";
 import type { ToolManager } from "../tools/tool-manager";
 import type { ConversationOrchestrator } from "./conversation-orchestrator";
-import type { DebugLogger } from "../utils/debug-logger";
+import { createDebugLogger } from "../utils/debug-logger";
 
 export class StepExecutor {
 	private llmProvider: LLMProvider;
@@ -13,7 +13,7 @@ export class StepExecutor {
 	private toolManager: ToolManager;
 	private conversationOrchestrator: ConversationOrchestrator;
 	private model: string;
-	private debugLogger: DebugLogger | undefined;
+	private logger: ReturnType<typeof createDebugLogger>;
 	private agentId: string;
 
 	constructor(
@@ -23,7 +23,7 @@ export class StepExecutor {
 		toolManager: ToolManager,
 		conversationOrchestrator: ConversationOrchestrator,
 		model: string,
-		debugLogger?: DebugLogger,
+		debug: boolean = false,
 	) {
 		this.agentId = agentId;
 		this.llmProvider = llmProvider;
@@ -31,7 +31,7 @@ export class StepExecutor {
 		this.toolManager = toolManager;
 		this.conversationOrchestrator = conversationOrchestrator;
 		this.model = model;
-		this.debugLogger = debugLogger;
+		this.logger = createDebugLogger(agentId, debug);
 	}
 
 	async executeStep(systemPrompt: string, task: string): Promise<StepOutput> {
@@ -83,9 +83,10 @@ export class StepExecutor {
 			finish_reason: response.finish_reason,
 		};
 
-		if (this.debugLogger) {
-			this.debugLogger.logRawLLMResponse(response.content);
-		}
+		this.logger.info(
+			{ llmResponse: response.content, model: response.model },
+			"Received raw LLM response",
+		);
 
 		return { content: response.content, metadata };
 	}
@@ -97,9 +98,10 @@ export class StepExecutor {
 		try {
 			const parsed = this.responseFormatter.parseResponse(llmResponse.content);
 
-			if (this.debugLogger) {
-				this.debugLogger.logParsedLLMResponse(parsed.action);
-			}
+			this.logger.info(
+				{ parsedAction: parsed.action },
+				"Parsed LLM response action",
+			);
 
 			const validation = this.responseFormatter.validateResponse(parsed);
 			if (!validation.isValid) {

@@ -41,7 +41,6 @@ export { MetadataAggregator } from "./memory/metadata";
 export type { TokenUsage, StepMeta, AggregateUsage } from "./memory/metadata";
 
 // Utilities
-export { DebugLogger } from "./utils/debug-logger";
 export { SystemPromptBuilder } from "./utils/system-prompt-builder";
 export { default as logger } from "./utils/logger";
 
