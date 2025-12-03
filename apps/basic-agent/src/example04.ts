@@ -76,7 +76,7 @@ export async function example04() {
 
 	const agent = new Agent({
 		id: "Conversational Assistant",
-		model: "deepseek/deepseek-v3.2-speciale",
+		model: "openai/gpt-oss-120b",
 		tools: [getWeather, calculateTip],
 		memory: memory,
 	});
