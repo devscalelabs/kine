@@ -1,4 +1,4 @@
-import type { TokenUsage } from "./metadata";
+import type { TokenUsage } from "../memory/metadata";
 
 export interface LLMMessage {
 	role: "system" | "user" | "assistant" | "tool";

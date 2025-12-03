@@ -1,6 +1,6 @@
-import logger from "./logger";
+import logger from "../utils/logger";
 import { getToolMetadata } from "./tool";
-import type { Tool } from "./types";
+import type { Tool } from "../types";
 
 export class ToolManager {
 	private tools: Map<string, Tool> = new Map();

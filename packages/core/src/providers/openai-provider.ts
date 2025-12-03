@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources";
 
 import type { LLMMessage, LLMProvider, LLMResponse } from "./llm-provider";
-import type { TokenUsage } from "./metadata";
+import type { TokenUsage } from "../memory/metadata";
 
 export class OpenAIProvider implements LLMProvider {
 	private openai: OpenAI;

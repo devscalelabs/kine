@@ -1,18 +1,40 @@
-export { Agent } from "./agent";
-export { SimpleMemory } from "./memory";
-export { Response } from "./response";
-export {
-	defineTool,
-	getToolMetadata,
-	type ToolInput,
-	type ToolOutput,
-} from "./tool";
-export {
-	extractXMLTag,
-	parseXMLParameter,
-	parseXMLResponse,
-	type ParsedResponse,
-} from "./parser";
+// Agent & Configuration
+export { Agent } from "./agent/agent";
+export { AgentConfigBuilder } from "./agent/agent-config-builder";
+
+// Execution Flow
+export { ExecutionLoop } from "./execution/execution-loop";
+export { StepExecutor } from "./execution/step-executor";
+export { ConversationOrchestrator } from "./execution/conversation-orchestrator";
+
+// LLM Providers
+export type { LLMProvider, LLMMessage, LLMResponse } from "./providers/llm-provider";
+export { OpenAIProvider } from "./providers/openai-provider";
+
+// Response Handling
+export { Response } from "./response/response";
+export type { ResponseFormatter, StepOutput } from "./response/response-formatter";
+export { XMLResponseFormatter } from "./response/xml-response-formatter";
+export type { ParsedResponse } from "./response/parser";
+export { extractXMLTag, parseXMLParameter, parseXMLResponse } from "./response/parser";
+
+// Tools
+export type { Tool, ToolInput, ToolOutput } from "./tools/tool";
+export { defineTool, getToolMetadata } from "./tools/tool";
+export { ToolManager } from "./tools/tool-manager";
+
+// Memory & Metadata
+export { SimpleMemory } from "./memory/memory";
+export { StepsManager } from "./memory/steps";
+export { MetadataAggregator } from "./memory/metadata";
+export type { TokenUsage, StepMeta, AggregateUsage } from "./memory/metadata";
+
+// Utilities
+export { DebugLogger } from "./utils/debug-logger";
+export { SystemPromptBuilder } from "./utils/system-prompt-builder";
+export { default as logger } from "./utils/logger";
+
+// Types
 export type {
 	AgentConfig,
 	AgentRuntime,
@@ -22,15 +44,3 @@ export type {
 	MemoryStep,
 	Step,
 } from "./types";
-
-export { OpenAIProvider } from "./openai-provider";
-export { XMLResponseFormatter } from "./xml-response-formatter";
-export { ToolManager } from "./tool-manager";
-export { ConversationOrchestrator } from "./conversation-orchestrator";
-export { SystemPromptBuilder } from "./system-prompt-builder";
-export { StepExecutor } from "./step-executor";
-export { ExecutionLoop } from "./execution-loop";
-export { DebugLogger } from "./debug-logger";
-export { AgentConfigBuilder } from "./agent-config-builder";
-export type { LLMProvider, LLMMessage, LLMResponse } from "./llm-provider";
-export type { ResponseFormatter, StepOutput } from "./response-formatter";

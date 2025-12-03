@@ -1,7 +1,7 @@
-import logger from "./logger";
-import { StepsManager } from "./steps";
-import type { BaseMemory, Step } from "./types";
-import type { StepOutput } from "./response-formatter";
+import logger from "../utils/logger";
+import { StepsManager } from "../memory/steps";
+import type { BaseMemory, Step } from "../types";
+import type { StepOutput } from "../response/response-formatter";
 
 export class ConversationOrchestrator {
 	private stepsManager: StepsManager;

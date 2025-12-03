@@ -1,17 +1,17 @@
-import { ConversationOrchestrator } from "./conversation-orchestrator";
-import { DebugLogger } from "./debug-logger";
-import { ExecutionLoop } from "./execution-loop";
-import type { LLMProvider } from "./llm-provider";
-import { OpenAIProvider } from "./openai-provider";
-import type { Response } from "./response";
-import type { ResponseFormatter } from "./response-formatter";
-import { StepExecutor } from "./step-executor";
-import { SystemPromptBuilder } from "./system-prompt-builder";
-import { ToolManager } from "./tool-manager";
-import type { AgentConfig, AgentRuntime, Tool } from "./types";
-import { XMLResponseFormatter } from "./xml-response-formatter";
+import { ConversationOrchestrator } from "../execution/conversation-orchestrator";
+import { ExecutionLoop } from "../execution/execution-loop";
+import { StepExecutor } from "../execution/step-executor";
+import type { LLMProvider } from "../providers/llm-provider";
+import { OpenAIProvider } from "../providers/openai-provider";
+import type { Response } from "../response/response";
+import type { ResponseFormatter } from "../response/response-formatter";
+import { XMLResponseFormatter } from "../response/xml-response-formatter";
+import { ToolManager } from "../tools/tool-manager";
+import type { AgentConfig, AgentRuntime, Tool } from "../types";
+import { DebugLogger } from "../utils/debug-logger";
+import { SystemPromptBuilder } from "../utils/system-prompt-builder";
 
-export { Response } from "./response";
+export { Response } from "../response/response";
 
 export class Agent {
 	protected config: AgentConfig;
@@ -111,7 +111,9 @@ export class Agent {
 			const lastStep = steps[steps.length - 1];
 			if (lastStep.action === "finalize" && lastStep.result) {
 				// Create a minimal Response object
-				const { Response: ResponseClass } = await import("./response");
+				const { Response: ResponseClass } = await import(
+					"../response/response"
+				);
 				const agentRuntime: AgentRuntime = {
 					response: lastStep.result,
 					steps: steps,

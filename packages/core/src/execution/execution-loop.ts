@@ -1,7 +1,7 @@
-import { MetadataAggregator } from "./metadata";
-import { Response } from "./response";
-import type { AgentRuntime } from "./types";
-import type { StepOutput } from "./response-formatter";
+import { MetadataAggregator } from "../memory/metadata";
+import { Response } from "../response/response";
+import type { AgentRuntime } from "../types";
+import type { StepOutput } from "../response/response-formatter";
 import type { ConversationOrchestrator } from "./conversation-orchestrator";
 import type { StepExecutor } from "./step-executor";
 
