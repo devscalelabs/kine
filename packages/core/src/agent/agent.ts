@@ -33,12 +33,12 @@ export class Agent {
 
 		this.llmProvider = new OpenAIProvider(config.apiKey, config.baseURL);
 		this.responseFormatter = new XMLResponseFormatter();
-		this.toolManager = new ToolManager(config.id, this.debugLogger.isEnabled());
+		this.toolManager = new ToolManager(config.id, this.debugLogger);
 		this.conversationOrchestrator = new ConversationOrchestrator(
 			config.id,
 			config.maxSteps ?? 10,
 			config.memory || null,
-			this.debugLogger.isEnabled(),
+			this.debugLogger,
 		);
 		this.systemPromptBuilder = new SystemPromptBuilder(
 			config.id,
@@ -51,7 +51,7 @@ export class Agent {
 			this.toolManager,
 			this.conversationOrchestrator,
 			config.model,
-			this.debugLogger.isEnabled(),
+			this.debugLogger,
 		);
 		this.executionLoop = new ExecutionLoop(
 			this.conversationOrchestrator,
@@ -67,6 +67,10 @@ export class Agent {
 
 	getDebug(): boolean {
 		return this.debugLogger.isEnabled();
+	}
+
+	getDebugLogger(): DebugLogger {
+		return this.debugLogger;
 	}
 
 	registerTool(tool: Tool): void {

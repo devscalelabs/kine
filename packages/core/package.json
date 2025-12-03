@@ -59,15 +59,18 @@
 	"packageManager": "pnpm@10.23.0",
 	"devDependencies": {
 		"@types/node": "^24.10.1",
+		"@types/react": "^18.2.0",
 		"tsup": "^8.5.1",
 		"tsx": "^4.20.6",
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
+		"ink": "^4.4.0",
 		"openai": "^6.9.1",
 		"pino": "^10.1.0",
 		"pino-pretty": "^13.1.2",
 		"playwright": "^1.57.0",
+		"react": "^18.2.0",
 		"yaml": "^2.8.2",
 		"zod": "^4.1.13"
 	}
