@@ -7,6 +7,12 @@ export {
 	type ToolInput,
 	type ToolOutput,
 } from "./tool";
+export {
+	extractXMLTag,
+	parseXMLParameter,
+	parseXMLResponse,
+	type ParsedResponse,
+} from "./parser";
 export type {
 	AgentConfig,
 	AgentRuntime,

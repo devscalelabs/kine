@@ -1,9 +1,9 @@
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources";
-import { parse } from "yaml";
 
 import logger from "./logger";
 import { MetadataAggregator, type TokenUsage } from "./metadata";
+import { parseXMLResponse } from "./parser";
 import { Response } from "./response";
 import { StepsManager } from "./steps";
 import { getToolMetadata } from "./tool";
@@ -94,7 +94,6 @@ export class Agent {
 			);
 
 			if (this.memory) {
-				// Get the last added step which includes metadata
 				const steps = this.stepsManager.getAllSteps();
 				const lastStep = steps[steps.length - 1];
 				if (lastStep) {
@@ -184,7 +183,6 @@ export class Agent {
 				stepOutput.llmMetadata,
 			);
 
-			// Get the last added step which includes metadata and stream it
 			const steps = this.stepsManager.getAllSteps();
 			const lastStep = steps[steps.length - 1];
 
@@ -250,17 +248,14 @@ export class Agent {
 			{ role: "user", content: task },
 		];
 
-		// Add memory conversation history first (for context across multiple runs)
 		if (this.memory) {
 			const memoryHistory = this.memory.toConversationHistory();
-			// Remove the current user message from memory history to avoid duplication
 			const filteredMemoryHistory = memoryHistory.filter(
 				(msg: any) => !(msg.role === "user" && msg.content === task),
 			);
 			messages.splice(1, 0, ...filteredMemoryHistory);
 		}
 
-		// Add current session's step history
 		const history = this.stepsManager.buildConversationHistory();
 		messages.push(...history);
 
@@ -271,7 +266,6 @@ export class Agent {
 		});
 		const latency = Date.now() - startTime;
 
-		// Extract metadata from OpenAI response
 		const llmMetadata: {
 			tokens?: TokenUsage;
 			latency: number;
@@ -297,17 +291,21 @@ export class Agent {
 		const rawMsg = completion.choices[0]?.message.content ?? "";
 		let parsed: any;
 
+		if (this.debug) {
+			logger.debug(`[${this.config.id}] Raw LLM response: ${rawMsg}`);
+		}
+
 		try {
-			parsed = parse(rawMsg);
+			parsed = parseXMLResponse(rawMsg);
 		} catch (error) {
 			return {
 				type: "error" as const,
-				content: "Invalid YAML format",
+				content: "Invalid XML format",
 				action: undefined,
 				parameter: undefined,
-				result: `YAML parsing error: ${
+				result: `XML parsing error: ${
 					error instanceof Error ? error.message : String(error)
-				}. Please respond with valid YAML only.`,
+				}. Please respond with valid XML tags only.`,
 				llmMetadata,
 			};
 		}
@@ -316,19 +314,20 @@ export class Agent {
 			logger.debug(`[${this.config.id}] LLM response: action=${parsed.action}`);
 		}
 
-		if (!rawMsg.includes("action:")) {
+		if (!parsed.action) {
 			return {
 				type: "error" as const,
-				content: "LLM response missing 'action' field",
+				content: "LLM response missing 'action' tag",
 				action: undefined,
 				parameter: undefined,
-				result: "LLM response skipped 'action'",
+				result:
+					"LLM response skipped 'action' tag. Please include <action> tag in your response.",
 				llmMetadata,
 			};
 		}
 
 		if (parsed.action === "finalize") {
-			const finalAnswer = parsed.final_answer || parsed.parameter?.answer || "";
+			const finalAnswer = parsed.finalAnswer || "";
 
 			if (!finalAnswer.trim()) {
 				return {
@@ -337,7 +336,7 @@ export class Agent {
 					action: "finalize",
 					parameter: parsed.parameter,
 					result:
-						"final_answer cannot be empty. Provide a substantive response.",
+						"final_answer cannot be empty. Provide a substantive response with <final_answer> tag.",
 					llmMetadata,
 				};
 			}
@@ -410,46 +409,47 @@ export class Agent {
 
     ${toolsList}
 
-    REQUIRED FIELDS IN EVERY RESPONSE:
-    - thought: (string) Your reasoning about what to do next
-    - action: (string) Name of tool to use, or 'finalize' to end
-    - parameter: (object) Input data for the tool
+    REQUIRED XML TAGS IN EVERY RESPONSE:
+    - <thought>: Your reasoning about what to do next
+    - <action>: Name of tool to use, or 'finalize' to end
+    - <parameter>: Input data for the tool (can contain nested XML tags or JSON)
 
     WHEN ACTION IS 'finalize':
-    - final_answer: (string) REQUIRED. Your complete response to the user. MUST be substantive and helpful.
+    - <final_answer>: REQUIRED. Your complete response to the user. MUST be substantive and helpful.
 
     CRITICAL RULES:
-    1. EVERY response MUST include 'action' field
-    2. NEVER use backticks, code blocks, or text outside YAML
-    3. YAML keys must be lowercase
-    4. If you can answer immediately, use 'finalize' with a complete 'final_answer'
+    1. EVERY response MUST include <action> tag - NO EXCEPTIONS EVER
+    2. NEVER use backticks, code blocks, or ANY text outside XML tags
+    3. XML tags must be properly closed: <tag>content</tag>
+    4. If you can answer immediately, use 'finalize' with a complete <final_answer>
     5. If you need information, use a tool, then 'finalize' with the answer
-    6. 'final_answer' must NEVER be empty or generic - provide real value
+    6. <final_answer> must NEVER be empty or generic - provide real value
+    7. ALWAYS wrap your ENTIRE response in XML tags - ZERO plain text allowed
+    8. FAILURE to include <action> tag will result in errors - ALWAYS include it
 
     EXAMPLES:
 
-    # Example 1: Simple query (no tools needed)
-    thought: "User asked for introduction. I can answer directly without tools."
-    action: "finalize"
-    final_answer: "I am ${
+    <!-- Example 1: Simple query (no tools needed) -->
+    <thought>User asked for introduction. I can answer directly without tools.</thought>
+    <action>finalize</action>
+    <final_answer>I am ${
 			this.config.id
-		}, an AI agent built with Kine by Devscalelabs. I can help you with various tasks using my available tools."
+		}, an AI agent built with Kine by Devscalelabs. I can help you with various tasks using my available tools.</final_answer>
 
-    # Example 2: Need to use tool first
-    thought: "User wants current weather. I need to use the weather tool."
-    action: "get_weather"
-    parameter:
-      location: "New York"
+    <!-- Example 2: Need to use tool first -->
+    <thought>User wants current weather. I need to use the weather tool.</thought>
+    <action>get_weather</action>
+    <parameter>
+      <location>New York</location>
+      <units>celsius</units>
+    </parameter>
 
-    # After tool returns observation
-    observation:
-      temperature: 72
-      condition: "sunny"
-    thought: "Got weather data. Now I can provide final answer."
-    action: "finalize"
-    final_answer: "The current weather in New York is 72°F and sunny."
+    <!-- After tool returns observation -->
+    <thought>Got weather data. Now I can provide final answer.</thought>
+    <action>finalize</action>
+    <final_answer>The current weather in New York is 22°C and sunny.</final_answer>
 
-    BEGIN. RESPOND WITH VALID YAML ONLY.
+    BEGIN. YOUR ENTIRE RESPONSE MUST BE XML TAGS ONLY - NO PLAIN TEXT WHATSOEVER. EVERY RESPONSE MUST HAVE <action> TAG.
     `.trim();
 	}
 }
