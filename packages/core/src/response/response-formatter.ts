@@ -21,4 +21,9 @@ export interface ResponseFormatter {
 		error?: string;
 	};
 	formatError(error: Error | string, context?: string): StepOutput;
+
+	// NEW: Add these methods to eliminate type casting
+	formatValidationError(error: string, parsed: ParsedResponse): StepOutput;
+	formatFinalizeResponse(parsed: ParsedResponse, metadata: any): StepOutput;
+	formatToolResponse(parsed: ParsedResponse, metadata: any): StepOutput;
 }
