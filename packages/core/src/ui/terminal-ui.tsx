@@ -1,20 +1,15 @@
+import { Box, render, Text } from "ink";
 import React from "react";
-import { render } from "ink";
-import { Box, Text } from "ink";
+
 import type { AgentRuntime } from "../types";
 import type { DebugLogger } from "../utils/debug-logger";
 
 interface DebugDisplayProps {
 	events: any[];
 	steps: any[];
-	agentId: string;
 }
 
-const DebugDisplay: React.FC<DebugDisplayProps> = ({
-	events,
-	steps,
-	agentId,
-}) => {
+const DebugDisplay: React.FC<DebugDisplayProps> = ({ events, steps }) => {
 	const latestEvents = events.slice(-10); // Show last 10 events
 
 	return React.createElement(
@@ -112,7 +107,7 @@ const DebugDisplay: React.FC<DebugDisplayProps> = ({
 
 export class TerminalUI {
 	private runtime: AgentRuntime;
-	private debugLogger?: DebugLogger;
+	private debugLogger: DebugLogger | undefined;
 	private uiInstance?: any;
 
 	constructor(runtime: AgentRuntime, debugLogger?: DebugLogger) {
@@ -131,7 +126,6 @@ export class TerminalUI {
 			React.createElement(DebugDisplay, {
 				steps: this.runtime.steps || [],
 				events: debugEvents,
-				agentId: this.runtime.response ? "Completed" : "Running",
 			}),
 		);
 	}

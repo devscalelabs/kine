@@ -93,12 +93,7 @@ export async function example04() {
 	for (let i = 0; i < conversations.length; i++) {
 		const userMessage = conversations[i];
 
-		const stream = agent.runStreaming(userMessage);
-
-		let result;
-
-		while (!(result = await stream.next()).done) {
-			console.log(result.value);
-		}
+		const stream = await agent.run(userMessage);
+		stream.debug();
 	}
 }
