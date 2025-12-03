@@ -8,7 +8,6 @@ import type { ResponseFormatter } from "../response/response-formatter";
 import { XMLResponseFormatter } from "../response/xml-response-formatter";
 import { ToolManager } from "../tools/tool-manager";
 import type { AgentConfig, AgentRuntime, Tool } from "../types";
-import { createDebugLogger } from "../utils/debug-logger";
 import { SystemPromptBuilder } from "../utils/system-prompt-builder";
 
 export { Response } from "../response/response";
@@ -22,12 +21,9 @@ export class Agent {
 	private systemPromptBuilder: SystemPromptBuilder;
 	private stepExecutor: StepExecutor;
 	private executionLoop: ExecutionLoop;
-	private logger: ReturnType<typeof createDebugLogger>;
 
 	constructor(config: AgentConfig) {
 		this.config = config;
-		this.logger = createDebugLogger(config.id, config.debug ?? false);
-
 		this.llmProvider = new OpenAIProvider(config.apiKey, config.baseURL);
 		this.responseFormatter = new XMLResponseFormatter();
 		this.toolManager = new ToolManager(config.id, config.debug ?? false);
