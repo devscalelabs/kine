@@ -19,5 +19,18 @@ export default defineConfig({
 			dts: ".d.mts",
 		};
 	},
-	external: ["openai", "pino", "pino-pretty", "playwright", "yaml", "zod"],
+	external: [
+		"openai",
+		"pino",
+		"pino-pretty",
+		"playwright",
+		"yaml",
+		"zod",
+		"react",
+		"ink",
+	],
+	esbuildOptions: (options) => {
+		options.jsxFactory = "React.createElement";
+		return options;
+	},
 });

@@ -1,30 +1,22 @@
-import logger from "../utils/logger";
 import { getToolMetadata } from "./tool";
 import type { Tool } from "../types";
+import { createDebugLogger } from "../utils/debug-logger";
 
 export class ToolManager {
 	private tools: Map<string, Tool> = new Map();
-	private debug: boolean;
-	private agentId: string;
+	private logger: ReturnType<typeof createDebugLogger>;
 
 	constructor(agentId: string, debug: boolean = false) {
-		this.agentId = agentId;
-		this.debug = debug;
+		this.logger = createDebugLogger(agentId, debug);
 	}
 
 	registerTool(tool: Tool): void {
 		this.tools.set(tool.name, tool);
 
-		if (this.debug) {
-			logger.debug(`[${this.agentId}] Registered tool: ${tool.name}`);
-		}
-
-		const metadata = getToolMetadata(tool);
-		if (this.debug) {
-			logger.debug(
-				`[${this.agentId}] Tool metadata: ${JSON.stringify(metadata)}`,
-			);
-		}
+		this.logger.info(
+			{ tool: tool.name, metadata: getToolMetadata(tool) },
+			"Tool registered successfully",
+		);
 	}
 
 	getTool(name: string): Tool | undefined {
