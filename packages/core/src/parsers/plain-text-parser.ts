@@ -1,10 +1,16 @@
-import { ACTION_KEYWORDS, DEFAULT_ACTION } from "../response/config";
+import { DEFAULT_ACTION } from "../response/config";
 import type { ParsedResponse } from "../types";
 
-export function parsePlainTextResponse(rawMsg: string): ParsedResponse {
+export function parsePlainTextResponse(
+	rawMsg: string,
+	availableToolNames: string[] = [],
+): ParsedResponse {
 	let detectedAction: string | undefined;
 
-	for (const keyword of ACTION_KEYWORDS) {
+	// Always include "finalize" as a valid action
+	const allActionKeywords = [DEFAULT_ACTION, ...availableToolNames];
+
+	for (const keyword of allActionKeywords) {
 		if (rawMsg.toLowerCase().includes(keyword)) {
 			detectedAction = keyword;
 			break;

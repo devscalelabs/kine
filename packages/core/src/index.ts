@@ -21,11 +21,10 @@ export type {
 	AgentConfig,
 	AgentRuntime,
 	BaseMemory,
-	ImageAnalysisResult,
-	ImageGenerationRequest,
 	MemoryConfig,
 	MemoryMessage,
 	MemoryStep,
+	MultimodalContent,
 	ParsedResponse,
 	Step,
 } from "./types";

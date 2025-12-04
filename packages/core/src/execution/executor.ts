@@ -276,6 +276,10 @@ export class Executor {
 		metadata: any;
 	}): StepOutput {
 		try {
+			// Update the response formatter with current tool names
+			const availableToolNames = this.toolManager.getToolNames();
+			this.responseFormatter.setAvailableToolNames(availableToolNames);
+
 			const parsed = this.responseFormatter.parseResponse(llmResponse.content);
 
 			this.logger.info(

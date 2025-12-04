@@ -3,8 +3,18 @@ import { parseXMLResponse } from "../parsers";
 import type { ParsedResponse } from "../types";
 
 export class XMLResponseFormatter implements ResponseFormatter {
+	private availableToolNames: string[] = [];
+
+	constructor(availableToolNames: string[] = []) {
+		this.availableToolNames = availableToolNames;
+	}
+
+	setAvailableToolNames(toolNames: string[]): void {
+		this.availableToolNames = toolNames;
+	}
+
 	parseResponse(rawResponse: string): ParsedResponse {
-		return parseXMLResponse(rawResponse);
+		return parseXMLResponse(rawResponse, this.availableToolNames);
 	}
 
 	validateResponse(parsed: ParsedResponse): {
@@ -92,38 +102,6 @@ export class XMLResponseFormatter implements ResponseFormatter {
 		if (llmMetadata) {
 			output.llmMetadata = llmMetadata;
 		}
-
-		return output;
-	}
-
-	formatImageAnalysisResponse(
-		parsed: ParsedResponse,
-		llmMetadata?: any,
-	): StepOutput {
-		const output: StepOutput = {
-			type: "tool",
-			content: parsed.thought || "",
-			action: "analyze_image",
-			parameter: parsed.parameter,
-			result: parsed.imageAnalysis,
-			llmMetadata,
-		};
-
-		return output;
-	}
-
-	formatImageGenerationResponse(
-		parsed: ParsedResponse,
-		llmMetadata?: any,
-	): StepOutput {
-		const output: StepOutput = {
-			type: "tool",
-			content: parsed.thought || "",
-			action: "generate_image",
-			parameter: parsed.parameter,
-			result: parsed.imageGeneration,
-			llmMetadata,
-		};
 
 		return output;
 	}

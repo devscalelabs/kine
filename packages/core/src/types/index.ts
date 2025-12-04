@@ -30,7 +30,6 @@ export interface AgentConfig {
 }
 
 export interface BaseMemory {
-	// Message management
 	addMessage(
 		role: "user" | "assistant" | "system",
 		content: string | MultimodalContent,
@@ -40,13 +39,11 @@ export interface BaseMemory {
 	getRecentMessages(count: number): MemoryMessage[];
 	clearMessages(): void;
 
-	// Step management
 	addStep(step: Step, stepNumber: number): void;
 	getSteps(): MemoryStep[];
 	getRecentSteps(count: number): MemoryStep[];
 	clearSteps(): void;
 
-	// Utility
 	clearAll(): void;
 	getStats(): Record<string, number>;
 	getTokenUsage(): any;
@@ -92,49 +89,9 @@ export interface MultimodalContent {
 	};
 }
 
-export interface ImageAnalysisResult {
-	description: string;
-	objects?: string[];
-	text?: string[];
-	emotions?: string[];
-	colors?: string[];
-	confidence?: number;
-}
-
-export interface ImageGenerationResult {
-	url?: string;
-	b64_json?: string;
-	revised_prompt?: string;
-	model: string;
-	created: number;
-}
-
-export interface ImageGenerationConfig {
-	model?: string;
-	quality?: string;
-	size?: string;
-	style?: string;
-	n?: number;
-	response_format?: string;
-}
-
 export interface ParsedResponse {
 	thought?: string | undefined;
 	action?: string | undefined;
 	parameter?: any;
 	finalAnswer?: string | undefined;
-	imageAnalysis?: ImageAnalysisResult | undefined;
-	imageGeneration?: ImageGenerationRequest | undefined;
-}
-
-export interface ImageGenerationRequest {
-	prompt: string;
-	config?: {
-		model?: string;
-		quality?: string;
-		size?: string;
-		style?: string;
-		n?: number;
-		response_format?: string;
-	};
 }

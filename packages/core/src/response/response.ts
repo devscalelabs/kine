@@ -1,15 +1,5 @@
 import type { AggregateUsage, StepMeta } from "../memory/metadata";
-import type {
-	AgentRuntime,
-	ImageAnalysisResult,
-	ImageGenerationResult,
-} from "../types";
-import {
-	extractImageAnalysisResults,
-	extractImageBase64Data,
-	extractImageGenerationResults,
-	extractImageUrls,
-} from "../utils/formatting";
+import type { AgentRuntime } from "../types";
 import {
 	formatBeautifiedResponse,
 	formatSteps,
@@ -50,30 +40,5 @@ export class Response {
 
 	getFormattedSteps(): string {
 		return formatSteps(this.rawResponse);
-	}
-
-	getImageAnalysisResults(): ImageAnalysisResult[] {
-		if (!this.rawResponse.steps) return [];
-		return extractImageAnalysisResults(this.rawResponse.steps);
-	}
-
-	getImageGenerationResults(): ImageGenerationResult[] {
-		if (!this.rawResponse.steps) return [];
-		return extractImageGenerationResults(this.rawResponse.steps);
-	}
-
-	getImageUrls(): string[] {
-		return extractImageUrls(this.getImageGenerationResults());
-	}
-
-	getImageBase64Data(): string[] {
-		return extractImageBase64Data(this.getImageGenerationResults());
-	}
-
-	hasImageContent(): boolean {
-		return (
-			this.getImageAnalysisResults().length > 0 ||
-			this.getImageGenerationResults().length > 0
-		);
 	}
 }
