@@ -1,10 +1,10 @@
-import type { LLMProvider, LLMMessage } from "../providers/llm-provider";
+import type { ConversationOrchestrator } from "./conversation-orchestrator";
+import type { LLMMessage, LLMProvider } from "../providers/llm-provider";
 import type {
 	ResponseFormatter,
 	StepOutput,
 } from "../response/response-formatter";
 import type { ToolManager } from "../tools/tool-manager";
-import type { ConversationOrchestrator } from "./conversation-orchestrator";
 import { createDebugLogger } from "../utils/debug-logger";
 
 export class StepExecutor {
@@ -14,7 +14,6 @@ export class StepExecutor {
 	private conversationOrchestrator: ConversationOrchestrator;
 	private model: string;
 	private logger: ReturnType<typeof createDebugLogger>;
-	private agentId: string;
 
 	constructor(
 		agentId: string,
@@ -25,7 +24,6 @@ export class StepExecutor {
 		model: string,
 		debug: boolean = false,
 	) {
-		this.agentId = agentId;
 		this.llmProvider = llmProvider;
 		this.responseFormatter = responseFormatter;
 		this.toolManager = toolManager;
@@ -105,55 +103,23 @@ export class StepExecutor {
 
 			const validation = this.responseFormatter.validateResponse(parsed);
 			if (!validation.isValid) {
-				const xmlFormatter = this.responseFormatter as any;
-				if (xmlFormatter.formatValidationError) {
-					return xmlFormatter.formatValidationError(validation.error!, parsed);
-				}
-				return this.responseFormatter.formatError(
+				return this.responseFormatter.formatValidationError(
 					validation.error!,
-					parsed.thought || "Validation error",
+					parsed,
 				);
 			}
 
 			if (parsed.action === "finalize") {
-				const xmlFormatter = this.responseFormatter as any;
-				if (xmlFormatter.formatFinalizeResponse) {
-					return xmlFormatter.formatFinalizeResponse(
-						parsed,
-						llmResponse.metadata,
-					);
-				}
-				return {
-					type: "agent",
-					content: parsed.thought || "",
-					action: "finalize",
-					parameter: parsed.parameter,
-					result: parsed.finalAnswer,
-					llmMetadata: llmResponse.metadata,
-				};
+				return this.responseFormatter.formatFinalizeResponse(
+					parsed,
+					llmResponse.metadata,
+				);
 			}
 
-			const xmlFormatter = this.responseFormatter as any;
-			if (xmlFormatter.formatToolResponse) {
-				return xmlFormatter.formatToolResponse(parsed, llmResponse.metadata);
-			}
-
-			const output: StepOutput = {
-				type: "tool",
-				content: parsed.thought || "",
-				result: "pending",
-				llmMetadata: llmResponse.metadata,
-			};
-
-			if (parsed.action) {
-				output.action = parsed.action;
-			}
-
-			if (parsed.parameter !== undefined) {
-				output.parameter = parsed.parameter;
-			}
-
-			return output;
+			return this.responseFormatter.formatToolResponse(
+				parsed,
+				llmResponse.metadata,
+			);
 		} catch (error) {
 			return this.responseFormatter.formatError(
 				error instanceof Error ? error : String(error),

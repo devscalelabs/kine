@@ -1,13 +1,12 @@
 import { StepsManager } from "../memory/steps";
-import type { BaseMemory, Step } from "../types";
 import type { StepOutput } from "../response/response-formatter";
+import type { BaseMemory, Step } from "../types";
 import { createDebugLogger } from "../utils/debug-logger";
 
 export class ConversationOrchestrator {
 	private stepsManager: StepsManager;
 	private memory: BaseMemory | null;
 	private logger: ReturnType<typeof createDebugLogger>;
-	private agentId: string;
 
 	constructor(
 		agentId: string,
@@ -15,7 +14,6 @@ export class ConversationOrchestrator {
 		memory: BaseMemory | null,
 		debug: boolean = false,
 	) {
-		this.agentId = agentId;
 		this.stepsManager = new StepsManager(maxSteps);
 		this.memory = memory;
 		this.logger = createDebugLogger(agentId, debug);

@@ -1,56 +1,27 @@
-import { ConversationOrchestrator } from "../execution/conversation-orchestrator";
-import { ExecutionLoop } from "../execution/execution-loop";
-import { StepExecutor } from "../execution/step-executor";
-import type { LLMProvider } from "../providers/llm-provider";
-import { OpenAIProvider } from "../providers/openai-provider";
+import type { ExecutionLoop } from "../execution/execution-loop";
+import { AgentFactory } from "../factories/agent-factory";
 import type { Response } from "../response/response";
-import type { ResponseFormatter } from "../response/response-formatter";
-import { XMLResponseFormatter } from "../response/xml-response-formatter";
-import { ToolManager } from "../tools/tool-manager";
+import type { ToolManager } from "../tools/tool-manager";
 import type { AgentConfig, AgentRuntime, Tool } from "../types";
-import { SystemPromptBuilder } from "../utils/system-prompt-builder";
+import type { SystemPromptBuilder } from "../utils/system-prompt-builder";
 
 export { Response } from "../response/response";
 
 export class Agent {
-	protected config: AgentConfig;
-	private llmProvider: LLMProvider;
-	private responseFormatter: ResponseFormatter;
-	private toolManager: ToolManager;
-	private conversationOrchestrator: ConversationOrchestrator;
-	private systemPromptBuilder: SystemPromptBuilder;
-	private stepExecutor: StepExecutor;
 	private executionLoop: ExecutionLoop;
+	private systemPromptBuilder: SystemPromptBuilder;
+	private toolManager: ToolManager;
 
 	constructor(config: AgentConfig) {
-		this.config = config;
-		this.llmProvider = new OpenAIProvider(config.apiKey, config.baseURL);
-		this.responseFormatter = new XMLResponseFormatter();
-		this.toolManager = new ToolManager(config.id, config.debug ?? false);
-		this.conversationOrchestrator = new ConversationOrchestrator(
-			config.id,
-			config.maxSteps ?? 10,
-			config.memory || null,
-			config.debug ?? false,
-		);
-		this.systemPromptBuilder = new SystemPromptBuilder(
-			config.id,
-			config.description,
-		);
-		this.stepExecutor = new StepExecutor(
-			config.id,
-			this.llmProvider,
-			this.responseFormatter,
-			this.toolManager,
-			this.conversationOrchestrator,
-			config.model,
-			config.debug ?? false,
-		);
-		this.executionLoop = new ExecutionLoop(
-			this.conversationOrchestrator,
-			this.stepExecutor,
-		);
+		// Use internal factory to create all dependencies
+		const dependencies = AgentFactory.createDependencies(config);
 
+		// Assign dependencies
+		this.executionLoop = dependencies.executionLoop;
+		this.systemPromptBuilder = dependencies.systemPromptBuilder;
+		this.toolManager = dependencies.toolManager;
+
+		// Register tools from config
 		if (config.tools) {
 			for (const tool of config.tools) {
 				this.registerTool(tool);
