@@ -1,6 +1,6 @@
 import type { ResponseFormatter, StepOutput } from "./response-formatter";
-import type { ParsedResponse } from "../types";
 import { parseXMLResponse } from "../parsers";
+import type { ParsedResponse } from "../types";
 
 export class XMLResponseFormatter implements ResponseFormatter {
 	parseResponse(rawResponse: string): ParsedResponse {

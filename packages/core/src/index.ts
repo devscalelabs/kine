@@ -13,11 +13,6 @@ export type {
 	ResponseFormatter,
 	StepOutput,
 } from "./response/response-formatter";
-export type {
-	ImageAnalysisResult,
-	ImageGenerationRequest,
-	ParsedResponse,
-} from "./types";
 export { XMLResponseFormatter } from "./response/xml-response-formatter";
 export type { Tool, ToolInput, ToolOutput } from "./tools/tool";
 export { defineTool, getToolMetadata } from "./tools/tool";
@@ -26,9 +21,12 @@ export type {
 	AgentConfig,
 	AgentRuntime,
 	BaseMemory,
+	ImageAnalysisResult,
+	ImageGenerationRequest,
 	MemoryConfig,
 	MemoryMessage,
 	MemoryStep,
+	ParsedResponse,
 	Step,
 } from "./types";
 export { default as logger } from "./utils/logger";
