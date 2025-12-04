@@ -39,3 +39,6 @@ export async function example05() {
 	console.log("\n💾 Memory Usage:");
 	console.log(JSON.stringify(memory.getStats(), null, 2));
 }
+
+// Run the example when this file is executed directly
+example05().catch(console.error);

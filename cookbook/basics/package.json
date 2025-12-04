@@ -7,7 +7,12 @@
 	"scripts": {
 		"build": "tsc",
 		"dev": "pnpm with-env tsx src/main.ts",
-		"with-env": "dotenv -e ../../.env --"
+		"with-env": "dotenv -e ../../.env --",
+		"example:01": "pnpm with-env tsx src/01-weather-agent.ts",
+		"example:02": "pnpm with-env tsx src/02-calculator-agent.ts",
+		"example:03": "pnpm with-env tsx src/03-streaming-weather-agent.ts",
+		"example:04": "pnpm with-env tsx src/04-conversational-agent.ts",
+		"example:05": "pnpm with-env tsx src/05-image-analysis-agent.ts"
 	},
 	"keywords": [],
 	"author": "",

@@ -89,3 +89,6 @@ export async function example03() {
 	console.log("\n=== Beautified Response ===");
 	console.log(finalResponse.beautify());
 }
+
+// Run the example when this file is executed directly
+example03().catch(console.error);

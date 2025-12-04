@@ -98,3 +98,6 @@ export async function example04() {
 		console.log(`🤖 Assistant: ${response.getFinalAnswer()}`);
 	}
 }
+
+// Run the example when this file is executed directly
+example04().catch(console.error);

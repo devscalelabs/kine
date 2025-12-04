@@ -72,3 +72,6 @@ export async function example01() {
 	// Or use beautify() for full formatted output with tokens
 	console.log(response.beautify());
 }
+
+// Run the example when this file is executed directly
+example01().catch(console.error);

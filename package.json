@@ -8,7 +8,12 @@
 		"build": "pnpm run --filter=@devscalelabs/kine build",
 		"format": "pnpm exec biome format --write",
 		"lint": "pnpm exec biome check",
-		"lint:fix": "pnpm exec biome check --write --unsafe"
+		"lint:fix": "pnpm exec biome check --write --unsafe",
+		"example:01": "pnpm run --filter=basics example:01",
+		"example:02": "pnpm run --filter=basics example:02",
+		"example:03": "pnpm run --filter=basics example:03",
+		"example:04": "pnpm run --filter=basics example:04",
+		"example:05": "pnpm run --filter=basics example:05"
 	},
 	"keywords": [],
 	"author": "",

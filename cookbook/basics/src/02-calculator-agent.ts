@@ -59,3 +59,6 @@ export async function example02() {
 
 	console.log(response.getRawResponse().response);
 }
+
+// Run the example when this file is executed directly
+example02().catch(console.error);
