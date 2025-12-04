@@ -12,7 +12,7 @@ import type {
 	Step,
 	Tool,
 } from "../types";
-import { createDebugLogger } from "../utils/debug-logger";
+import { createDebugLogger } from "../utils/logger";
 
 export interface ExecutorConfig {
 	agentId: string;

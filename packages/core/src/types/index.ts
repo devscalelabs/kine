@@ -117,3 +117,24 @@ export interface ImageGenerationConfig {
 	n?: number;
 	response_format?: string;
 }
+
+export interface ParsedResponse {
+	thought?: string | undefined;
+	action?: string | undefined;
+	parameter?: any;
+	finalAnswer?: string | undefined;
+	imageAnalysis?: ImageAnalysisResult | undefined;
+	imageGeneration?: ImageGenerationRequest | undefined;
+}
+
+export interface ImageGenerationRequest {
+	prompt: string;
+	config?: {
+		model?: string;
+		quality?: string;
+		size?: string;
+		style?: string;
+		n?: number;
+		response_format?: string;
+	};
+}

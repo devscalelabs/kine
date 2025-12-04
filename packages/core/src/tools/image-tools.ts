@@ -1,10 +1,7 @@
 import { z } from "zod";
+
 import { defineTool } from "./tool";
-import type {
-	ImageAnalysisResult,
-	ImageGenerationResult,
-	ImageGenerationConfig,
-} from "../types";
+import type { ImageAnalysisResult, ImageGenerationResult } from "../types";
 
 // Image Analysis Tool
 export const analyzeImageTool = defineTool({

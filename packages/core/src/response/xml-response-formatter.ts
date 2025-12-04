@@ -1,9 +1,9 @@
-import type { ParsedResponse } from "./parser";
 import type { ResponseFormatter, StepOutput } from "./response-formatter";
+import type { ParsedResponse } from "../types";
+import { parseXMLResponse } from "../parsers";
 
 export class XMLResponseFormatter implements ResponseFormatter {
 	parseResponse(rawResponse: string): ParsedResponse {
-		const { parseXMLResponse } = require("./parser");
 		return parseXMLResponse(rawResponse);
 	}
 

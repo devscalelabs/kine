@@ -1,4 +1,4 @@
-import type { ImageAnalysisResult, ParsedResponse } from "./parser";
+import type { ImageAnalysisResult, ParsedResponse } from "../types";
 
 export interface StepOutput {
 	type: "agent" | "error" | "tool";

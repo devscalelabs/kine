@@ -3,17 +3,21 @@ export { Executor } from "./execution/executor";
 export { SimpleMemory } from "./memory/memory";
 export type { AggregateUsage, StepMeta, TokenUsage } from "./memory/metadata";
 export { MetadataAggregator } from "./memory/metadata";
-export type { ParsedResponse } from "./response/parser";
+export { parseXMLResponse } from "./parsers";
 export {
 	extractXMLTag,
 	parseXMLParameter,
-	parseXMLResponse,
-} from "./response/parser";
+} from "./parsers/xml-parser";
 export { Response } from "./response/response";
 export type {
 	ResponseFormatter,
 	StepOutput,
 } from "./response/response-formatter";
+export type {
+	ImageAnalysisResult,
+	ImageGenerationRequest,
+	ParsedResponse,
+} from "./types";
 export { XMLResponseFormatter } from "./response/xml-response-formatter";
 export type { Tool, ToolInput, ToolOutput } from "./tools/tool";
 export { defineTool, getToolMetadata } from "./tools/tool";

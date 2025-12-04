@@ -1,6 +1,6 @@
 import { getToolMetadata } from "./tool";
 import type { Tool } from "../types";
-import { createDebugLogger } from "../utils/debug-logger";
+import { createDebugLogger } from "../utils/logger";
 
 export class ToolManager {
 	private tools: Map<string, Tool> = new Map();
