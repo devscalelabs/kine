@@ -51,6 +51,10 @@ export interface BaseMemory {
 	getStats(): Record<string, number>;
 	getTokenUsage(): any;
 	toConversationHistory(): import("openai/resources").ChatCompletionMessageParam[];
+	stepsToConversationHistory(): Array<{
+		role: "assistant" | "user";
+		content: string;
+	}>;
 }
 
 export interface MemoryMessage {

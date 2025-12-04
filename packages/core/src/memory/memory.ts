@@ -112,7 +112,6 @@ export class SimpleMemory implements BaseMemory {
 	}
 
 	getTokenUsage(): any {
-		// Aggregate token usage from all steps that have metadata
 		const stepsWithTokens = this.steps.filter((step) => step.meta?.tokens);
 		if (stepsWithTokens.length === 0) {
 			return {

@@ -93,6 +93,8 @@ export async function example04() {
 
 	for (let i = 0; i < conversations.length; i++) {
 		const userMessage = conversations[i];
-		await agent.run(userMessage);
+		console.log(`\n👤 User: ${userMessage}`);
+		const response = await agent.run(userMessage);
+		console.log(`🤖 Assistant: ${response.getFinalAnswer()}`);
 	}
 }

@@ -8,7 +8,7 @@ export interface ParsedResponse {
 export function extractXMLTag(content: string, tag: string): string | null {
 	const regex = new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, "i");
 	const match = content.match(regex);
-	return match && match[1] ? match[1].trim() : null;
+	return match?.[1] ? match[1].trim() : null;
 }
 
 export function parseXMLParameter(parameterStr: string | null): any {
@@ -72,7 +72,7 @@ function parsePlainTextResponse(rawMsg: string): ParsedResponse {
 	}
 
 	return {
-		thought: rawMsg.substring(0, 100) + "...",
+		thought: `${rawMsg.substring(0, 100)}...`,
 		action: detectedAction,
 		finalAnswer: detectedAction === "finalize" ? rawMsg.trim() : undefined,
 	};
