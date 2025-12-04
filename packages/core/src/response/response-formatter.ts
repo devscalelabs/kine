@@ -1,4 +1,8 @@
-import type { ParsedResponse } from "./parser";
+import type {
+	ImageAnalysisResult,
+	ImageGenerationRequest,
+	ParsedResponse,
+} from "./parser";
 
 export interface StepOutput {
 	type: "agent" | "error" | "tool";
@@ -12,6 +16,7 @@ export interface StepOutput {
 		model: string;
 		finish_reason?: string;
 	};
+	imageResult?: ImageAnalysisResult | any;
 }
 
 export interface ResponseFormatter {
@@ -25,4 +30,12 @@ export interface ResponseFormatter {
 	formatValidationError(error: string, parsed: ParsedResponse): StepOutput;
 	formatFinalizeResponse(parsed: ParsedResponse, metadata: any): StepOutput;
 	formatToolResponse(parsed: ParsedResponse, metadata: any): StepOutput;
+	formatImageAnalysisResponse(
+		parsed: ParsedResponse,
+		metadata: any,
+	): StepOutput;
+	formatImageGenerationResponse(
+		parsed: ParsedResponse,
+		metadata: any,
+	): StepOutput;
 }

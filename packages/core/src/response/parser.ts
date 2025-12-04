@@ -3,6 +3,29 @@ export interface ParsedResponse {
 	action?: string | undefined;
 	parameter?: any;
 	finalAnswer?: string | undefined;
+	imageAnalysis?: ImageAnalysisResult | undefined;
+	imageGeneration?: ImageGenerationRequest | undefined;
+}
+
+export interface ImageAnalysisResult {
+	description: string;
+	objects?: string[];
+	text?: string[];
+	emotions?: string[];
+	colors?: string[];
+	confidence?: number;
+}
+
+export interface ImageGenerationRequest {
+	prompt: string;
+	config?: {
+		model?: string;
+		quality?: string;
+		size?: string;
+		style?: string;
+		n?: number;
+		response_format?: string;
+	};
 }
 
 export function extractXMLTag(content: string, tag: string): string | null {
@@ -41,15 +64,25 @@ export function parseXMLResponse(rawMsg: string): ParsedResponse {
 	const action = extractXMLTag(rawMsg, "action");
 	const parameterStr = extractXMLTag(rawMsg, "parameter");
 	const finalAnswer = extractXMLTag(rawMsg, "final_answer");
+	const imageAnalysisStr = extractXMLTag(rawMsg, "image_analysis");
+	const imageGenerationStr = extractXMLTag(rawMsg, "image_generation");
 
 	const parameter = parseXMLParameter(parameterStr);
+	const imageAnalysis = imageAnalysisStr
+		? parseImageAnalysis(imageAnalysisStr)
+		: undefined;
+	const imageGeneration = imageGenerationStr
+		? parseImageGeneration(imageGenerationStr)
+		: undefined;
 
-	if (thought || action || finalAnswer) {
+	if (thought || action || finalAnswer || imageAnalysis || imageGeneration) {
 		return {
 			thought: thought || undefined,
 			action: action || undefined,
 			parameter,
 			finalAnswer: finalAnswer || undefined,
+			imageAnalysis,
+			imageGeneration,
 		};
 	}
 
@@ -57,7 +90,13 @@ export function parseXMLResponse(rawMsg: string): ParsedResponse {
 }
 
 function parsePlainTextResponse(rawMsg: string): ParsedResponse {
-	const actionKeywords = ["finalize", "get_weather", "calculate_tip"];
+	const actionKeywords = [
+		"finalize",
+		"get_weather",
+		"calculate_tip",
+		"analyze_image",
+		"generate_image",
+	];
 	let detectedAction: string | undefined;
 
 	for (const keyword of actionKeywords) {
@@ -76,4 +115,28 @@ function parsePlainTextResponse(rawMsg: string): ParsedResponse {
 		action: detectedAction,
 		finalAnswer: detectedAction === "finalize" ? rawMsg.trim() : undefined,
 	};
+}
+
+function parseImageAnalysis(imageAnalysisStr: string): ImageAnalysisResult {
+	try {
+		return JSON.parse(imageAnalysisStr);
+	} catch {
+		// Fallback to simple text parsing
+		return {
+			description: imageAnalysisStr.trim(),
+		};
+	}
+}
+
+function parseImageGeneration(
+	imageGenerationStr: string,
+): ImageGenerationRequest {
+	try {
+		return JSON.parse(imageGenerationStr);
+	} catch {
+		// Fallback to simple prompt
+		return {
+			prompt: imageGenerationStr.trim(),
+		};
+	}
 }

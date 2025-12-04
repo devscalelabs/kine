@@ -5,7 +5,13 @@ import { SimpleMemory } from "../memory/memory";
 import { Response } from "../response/response";
 import { XMLResponseFormatter } from "../response/xml-response-formatter";
 import { ToolManager } from "../tools/tool-manager";
-import type { AgentRuntime, BaseMemory, Step, Tool } from "../types";
+import type {
+	AgentRuntime,
+	BaseMemory,
+	MultimodalContent,
+	Step,
+	Tool,
+} from "../types";
 import { createDebugLogger } from "../utils/debug-logger";
 
 export interface ExecutorConfig {
@@ -60,14 +66,53 @@ export class Executor {
 		return this.toolManager.getToolsList();
 	}
 
-	async execute(systemPrompt: string, prompt: string): Promise<Response> {
+	private convertMultimodalContentToString(
+		content: string | MultimodalContent,
+	): string {
+		if (typeof content === "string") {
+			return content;
+		}
+
+		// Handle the new format with text and images array
+		if (content.text && content.images) {
+			let result = content.text;
+			if (content.images.length > 0) {
+				result +=
+					"\n\nImages:\n" +
+					content.images.map((url, i) => `[Image ${i + 1}: ${url}]`).join("\n");
+			}
+			return result;
+		}
+
+		// Handle the old format with type field
+		if (content.type === "text") {
+			return content.text || "";
+		}
+
+		if (content.type === "image") {
+			return `[Image: ${content.image_url?.url || "unknown"}]`;
+		}
+
+		// Fallback for text-only content
+		if (content.text) {
+			return content.text;
+		}
+
+		return String(content);
+	}
+
+	async execute(
+		systemPrompt: string,
+		prompt: string | MultimodalContent,
+	): Promise<Response> {
 		this.steps = [];
-		this.memory.addMessage("user", prompt);
+		const promptString = this.convertMultimodalContentToString(prompt);
+		this.memory.addMessage("user", promptString);
 
 		let finalResponse: string | null = null;
 
 		while (this.steps.length < this.maxSteps) {
-			const stepOutput = await this.executeStep(systemPrompt, prompt);
+			const stepOutput = await this.executeStep(systemPrompt, promptString);
 			this.addStep(stepOutput);
 
 			if (stepOutput.action === "finalize") {
@@ -96,15 +141,16 @@ export class Executor {
 
 	async *executeStreaming(
 		systemPrompt: string,
-		prompt: string,
+		prompt: string | MultimodalContent,
 	): AsyncGenerator<StepOutput, Response, unknown> {
 		this.steps = [];
-		this.memory.addMessage("user", prompt);
+		const promptString = this.convertMultimodalContentToString(prompt);
+		this.memory.addMessage("user", promptString);
 
 		let finalResponse: string | null = null;
 
 		while (this.steps.length < this.maxSteps) {
-			const stepOutput = await this.executeStep(systemPrompt, prompt);
+			const stepOutput = await this.executeStep(systemPrompt, promptString);
 			this.addStep(stepOutput);
 
 			const output: StepOutput = {

@@ -33,7 +33,7 @@ export interface BaseMemory {
 	// Message management
 	addMessage(
 		role: "user" | "assistant" | "system",
-		content: string,
+		content: string | MultimodalContent,
 		metadata?: Record<string, any>,
 	): void;
 	getMessages(): MemoryMessage[];
@@ -59,7 +59,7 @@ export interface BaseMemory {
 
 export interface MemoryMessage {
 	role: "user" | "assistant" | "system";
-	content: string;
+	content: string | MultimodalContent;
 	timestamp: Date;
 	metadata?: Record<string, any> | undefined;
 }
@@ -80,4 +80,40 @@ export interface Tool<Input = any, Output = any> {
 	inputSchema: z.ZodSchema<Input>;
 	outputSchema: z.ZodSchema<Output>;
 	execute(parameter: any): Promise<any>;
+}
+
+export interface MultimodalContent {
+	text?: string;
+	images?: string[];
+	type?: "text" | "image";
+	image_url?: {
+		url: string;
+		detail?: "low" | "high" | "auto";
+	};
+}
+
+export interface ImageAnalysisResult {
+	description: string;
+	objects?: string[];
+	text?: string[];
+	emotions?: string[];
+	colors?: string[];
+	confidence?: number;
+}
+
+export interface ImageGenerationResult {
+	url?: string;
+	b64_json?: string;
+	revised_prompt?: string;
+	model: string;
+	created: number;
+}
+
+export interface ImageGenerationConfig {
+	model?: string;
+	quality?: string;
+	size?: string;
+	style?: string;
+	n?: number;
+	response_format?: string;
 }

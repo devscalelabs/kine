@@ -1,7 +1,7 @@
 import { Executor } from "../execution/executor";
 import { SimpleMemory } from "../memory/memory";
 import type { Response } from "../response/response";
-import type { AgentConfig, Tool } from "../types";
+import type { AgentConfig, MultimodalContent, Tool } from "../types";
 import { SystemPromptBuilder } from "../utils/system-prompt-builder";
 
 export { Response } from "../response/response";
@@ -37,12 +37,12 @@ export class Agent {
 		this.executor.registerTool(tool);
 	}
 
-	async run(prompt: string): Promise<Response> {
+	async run(prompt: string | MultimodalContent): Promise<Response> {
 		const systemPrompt = this.buildSystemPrompt();
 		return await this.executor.execute(systemPrompt, prompt);
 	}
 
-	async *runStreaming(prompt: string): AsyncGenerator<
+	async *runStreaming(prompt: string | MultimodalContent): AsyncGenerator<
 		{
 			type: "agent" | "error" | "tool";
 			content: string;

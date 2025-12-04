@@ -1,5 +1,10 @@
 import type { AggregateUsage, StepMeta } from "../memory/metadata";
-import type { AgentRuntime } from "../types";
+import type {
+	AgentRuntime,
+	ImageAnalysisResult,
+	ImageGenerationResult,
+	MultimodalContent,
+} from "../types";
 
 export class Response {
 	private rawResponse: AgentRuntime;
@@ -138,10 +143,7 @@ export class Response {
 					stepStr += `\n  Thought: ${step.content}`;
 				}
 				if (step.result) {
-					const resultStr =
-						typeof step.result === "string"
-							? step.result
-							: JSON.stringify(step.result);
+					const resultStr = this.formatStepResult(step.result);
 					stepStr += `\n  Result: ${resultStr}`;
 				}
 				if (step.meta?.tokens) {
@@ -153,5 +155,87 @@ export class Response {
 				return stepStr;
 			})
 			.join("\n\n");
+	}
+
+	getImageAnalysisResults(): ImageAnalysisResult[] {
+		const results: ImageAnalysisResult[] = [];
+		if (this.rawResponse.steps) {
+			for (const step of this.rawResponse.steps) {
+				if (step.action === "analyze_image" && step.result) {
+					results.push(step.result as ImageAnalysisResult);
+				}
+			}
+		}
+		return results;
+	}
+
+	getImageGenerationResults(): ImageGenerationResult[] {
+		const results: ImageGenerationResult[] = [];
+		if (this.rawResponse.steps) {
+			for (const step of this.rawResponse.steps) {
+				if (step.action === "generate_image" && step.result) {
+					results.push(step.result as ImageGenerationResult);
+				}
+			}
+		}
+		return results;
+	}
+
+	getImageUrls(): string[] {
+		const urls: string[] = [];
+		const imageResults = this.getImageGenerationResults();
+		for (const result of imageResults) {
+			if (result.url) {
+				urls.push(result.url);
+			}
+		}
+		return urls;
+	}
+
+	getImageBase64Data(): string[] {
+		const base64Data: string[] = [];
+		const imageResults = this.getImageGenerationResults();
+		for (const result of imageResults) {
+			if (result.b64_json) {
+				base64Data.push(result.b64_json);
+			}
+		}
+		return base64Data;
+	}
+
+	hasImageContent(): boolean {
+		return (
+			this.getImageAnalysisResults().length > 0 ||
+			this.getImageGenerationResults().length > 0
+		);
+	}
+
+	private formatStepResult(result: any): string {
+		if (typeof result === "string") {
+			return result;
+		}
+
+		// Handle image results specially
+		if (result && typeof result === "object") {
+			if (result.url) {
+				return `Generated Image: ${result.url}`;
+			}
+			if (result.b64_json) {
+				return `Generated Image (base64): [${result.b64_json.length} characters]`;
+			}
+			if (result.description) {
+				// Image analysis result
+				let analysis = `Image Analysis: ${result.description}`;
+				if (result.objects && result.objects.length > 0) {
+					analysis += `\nObjects: ${result.objects.join(", ")}`;
+				}
+				if (result.text && result.text.length > 0) {
+					analysis += `\nText: ${result.text.join(", ")}`;
+				}
+				return analysis;
+			}
+		}
+
+		return JSON.stringify(result, null, 2);
 	}
 }

@@ -1,5 +1,6 @@
 import type {
 	ChatCompletionAssistantMessageParam,
+	ChatCompletionContentPart,
 	ChatCompletionMessageParam,
 	ChatCompletionToolMessageParam,
 } from "openai/resources";
@@ -9,6 +10,7 @@ import type {
 	MemoryConfig,
 	MemoryMessage,
 	MemoryStep,
+	MultimodalContent,
 	Step,
 } from "../types";
 
@@ -25,9 +27,75 @@ export class SimpleMemory implements BaseMemory {
 		};
 	}
 
+	private convertMultimodalContentToOpenAI(
+		content: string | MultimodalContent,
+	): string | ChatCompletionContentPart[] {
+		if (typeof content === "string") {
+			return content;
+		}
+
+		// Handle the new format with text and images array
+		if (content.text && content.images) {
+			const parts: ChatCompletionContentPart[] = [];
+
+			if (content.text) {
+				parts.push({
+					type: "text",
+					text: content.text,
+				});
+			}
+
+			if (content.images && content.images.length > 0) {
+				for (const imageUrl of content.images) {
+					parts.push({
+						type: "image_url",
+						image_url: {
+							url: imageUrl,
+						},
+					});
+				}
+			}
+
+			return parts;
+		}
+
+		// Handle the old format with type field
+		if (content.type === "text") {
+			return [
+				{
+					type: "text",
+					text: content.text || "",
+				},
+			];
+		}
+
+		if (content.type === "image") {
+			return [
+				{
+					type: "image_url",
+					image_url: {
+						url: content.image_url?.url || "",
+					},
+				},
+			];
+		}
+
+		// Fallback for text-only content
+		if (content.text) {
+			return [
+				{
+					type: "text",
+					text: content.text,
+				},
+			];
+		}
+
+		return String(content);
+	}
+
 	addMessage(
 		role: "user" | "assistant" | "system",
-		content: string,
+		content: string | MultimodalContent,
 		metadata?: Record<string, any> | undefined,
 	): void {
 		const message: MemoryMessage = {
@@ -148,7 +216,9 @@ export class SimpleMemory implements BaseMemory {
 		if (this.messages.length > 0 && this.messages[0]?.role === "user") {
 			history.push({
 				role: "user",
-				content: this.messages[0].content,
+				content: this.convertMultimodalContentToOpenAI(
+					this.messages[0].content,
+				),
 			});
 			messageIndex++;
 		}
@@ -174,20 +244,22 @@ export class SimpleMemory implements BaseMemory {
 					this.addStepToHistory(history, nextStep);
 					stepIndex++;
 				} else {
-					history.push({
+					const message = {
 						role: nextMessage.role as "user" | "assistant" | "system",
-						content: nextMessage.content,
-					});
+						content: this.convertMultimodalContentToOpenAI(nextMessage.content),
+					};
+					history.push(message as ChatCompletionMessageParam);
 					messageIndex++;
 				}
 			} else if (nextStep?.timestamp) {
 				this.addStepToHistory(history, nextStep);
 				stepIndex++;
 			} else if (nextMessage?.timestamp) {
-				history.push({
+				const message = {
 					role: nextMessage.role as "user" | "assistant" | "system",
-					content: nextMessage.content,
-				});
+					content: this.convertMultimodalContentToOpenAI(nextMessage.content),
+				};
+				history.push(message as ChatCompletionMessageParam);
 				messageIndex++;
 			}
 		}

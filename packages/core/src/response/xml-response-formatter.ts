@@ -95,4 +95,36 @@ export class XMLResponseFormatter implements ResponseFormatter {
 
 		return output;
 	}
+
+	formatImageAnalysisResponse(
+		parsed: ParsedResponse,
+		llmMetadata?: any,
+	): StepOutput {
+		const output: StepOutput = {
+			type: "tool",
+			content: parsed.thought || "",
+			action: "analyze_image",
+			parameter: parsed.parameter,
+			result: parsed.imageAnalysis,
+			llmMetadata,
+		};
+
+		return output;
+	}
+
+	formatImageGenerationResponse(
+		parsed: ParsedResponse,
+		llmMetadata?: any,
+	): StepOutput {
+		const output: StepOutput = {
+			type: "tool",
+			content: parsed.thought || "",
+			action: "generate_image",
+			parameter: parsed.parameter,
+			result: parsed.imageGeneration,
+			llmMetadata,
+		};
+
+		return output;
+	}
 }
