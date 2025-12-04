@@ -4,7 +4,7 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"dev": "pnpm run --filter=basic-agent dev",
+		"dev": "pnpm run --filter=basics dev",
 		"build": "pnpm run --filter=@devscalelabs/kine build",
 		"format": "pnpm exec biome format --write",
 		"lint": "pnpm exec biome check",

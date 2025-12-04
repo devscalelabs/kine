@@ -1,8 +1,4 @@
-import type {
-	ImageAnalysisResult,
-	ImageGenerationRequest,
-	ParsedResponse,
-} from "./parser";
+import type { ImageAnalysisResult, ParsedResponse } from "./parser";
 
 export interface StepOutput {
 	type: "agent" | "error" | "tool";
